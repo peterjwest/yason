@@ -2,15 +2,49 @@
 
 YASON is a lightweight data-interchange format. It is designed to be easy for humans and machines to write and understand.
 
-YASON is inspired by YAML and JSON. It aims to keep the transparency and simplicity of JSON with the readability of YAML.
+YASON was inspired by YAML and JSON. It aims to combine the transparency and simplicity of JSON with the readability of YAML.
 
-JSON is a great format, it is simple enough that anyone can learn it in a few minutes, and you could write a parser for it in any language in a few hours. YAML is very readable format, but it has a huge spec, which means parsers are complex, prone to bugs and rarely implement the entire spec.
+YASON is also a superset of JSON, which means any valid JSON document can be used as YASON.
 
-YASON is strictly a superset of JSON (unlike YAML which has whitespace restrictions), YASON implements the minimum complexity needed to produce readable documents.
+## Example
 
-## Blocks
+```
+# Simple values
+bar: "zig"
+zim: 23.2
+gir: null # Inline comment
+dib: true
+dab: false
 
-The YASON spec is described in a similar way to the [JSON spec](http://json.org/). YASON's structure is defined in blocks, listed below. Each block is described with a flowchart. Rectangular boxes are used to denote nested blocks. Rounded boxes are used to denote literal characters. Boxes with a diagonal corner denote a description of one or more characters.
+# Arrays
+zip:
+  - "zim"
+  - "gir"
+
+# JSON structures
+tau: {
+  foo-bar: 1
+  "zig zag": 2
+  "dib:": 3
+  "dab#": 4
+}
+tow: [1, 2, 3]
+```
+
+YASON primitive values are identical to YAML (which means strings must be double quoted). Keys in YASON can be unquoted as long as they don't include a double quote, colon or whitespace. Comments can be added to the end of any line.
+
+YASON supports any kind of indentation, as long as it is consistent within a document.
+
+
+## Structure
+
+The YASON spec is described in a similar way to the [JSON spec](http://json.org/). YASON's structure is defined in blocks, listed below. Each block is described with a flowchart.
+
+- Rectangular boxes are used to denote nested blocks.
+- Rounded boxes are used to denote literal characters.
+- Boxes with a diagonal corner denote a description of one or more characters.
+
+Boxes coloured in blue (`padding`, `spacing`, `whitespace` and `comment`) are optional, stylistic and do not affect the parsed data structure.
 
 ### document
 A document describes the structure of a parsable document (JSON does not explictly define this, but implicitly allows an array or object).
@@ -62,15 +96,22 @@ A number, identical to JSON.
 
 ![number](number.png)
 
+### padding
+Optional padding between two tokens.
+
+![padding](padding.png)
+
+### spacing
+Optional blank lines between two tokens, each line can contain a comment.
+
+![spacing](spacing.png)
+
+### whitespace
+Optional padding or spacing between two tokens.
+
+![whitespace](whitespace.png)
+
 ### comment
-A comment at the end of a line or on its own line. Allowed before any valid newline (see whitespace section).
+An optional comment at the end of a line or on its own line.
 
 ![comment](comment.png)
-
-## Whitespace
-In some blocks, additional whitespace is allowed between tokens.
-
-- Whitespace is allowed between any tokens in an object or array (as in JSON).
-- Spaces and tabs are allowed at the start and end of a document; and between any tokens in a document, list or map.
-- However, spaces and tabs are not allowed before or after an indent, list or map block.
-- Whitespace is not allowed between tokens in any other blocks.
