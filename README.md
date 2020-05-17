@@ -1,14 +1,14 @@
-# YASON
+# Yason
 
-YASON is a lightweight data-interchange format. It is designed to be easy for humans and machines to write and understand.
+Yason is a lightweight data-interchange format. It is designed to be easy for humans and machines to write and understand.
 
-YASON was inspired by YAML and JSON. It aims to combine the transparency and simplicity of JSON with the readability of YAML.
+Yason was inspired by YAML and JSON. It aims to combine the transparency and simplicity of JSON with the readability of YAML.
 
-YASON is also a superset of JSON, which means any valid JSON document can be used as YASON.
+Yason is also a superset of JSON, which means any valid JSON document can be used as Yason.
 
 ## Example
 
-```
+```yason
 # Simple values
 bar: "zig"
 zim: 23.2
@@ -16,10 +16,25 @@ gir: null # Inline comment
 dib: true
 dab: false
 
+# Objects
+zig:
+  foo: "bar"
+  zim: "gir"
+
 # Arrays
 zip:
   - "zim"
   - "gir"
+
+# Nested structures
+zoo:
+  -
+    foo: 1
+    bar: 2
+fig:
+  goo:
+    - 3
+    - 4
 
 # JSON structures
 tau: {
@@ -31,14 +46,13 @@ tau: {
 tow: [1, 2, 3]
 ```
 
-YASON primitive values are identical to YAML (which means strings must be double quoted). Keys in YASON can be unquoted as long as they don't include a double quote, colon or whitespace. Comments can be added to the end of any line.
+Yason primitive values are identical to YAML (which means strings must be double quoted). Keys in Yason can be unquoted as long as they don't include a double quote, colon or whitespace. Comments can be added to the end of any line.
 
-YASON supports any kind of indentation, as long as it is consistent within a document.
-
+Yason supports any kind of indentation, as long as it is consistent within a document.
 
 ## Structure
 
-The YASON spec is described in a similar way to the [JSON spec](http://json.org/). YASON's structure is defined in blocks, listed below. Each block is described with a flowchart.
+The Yason spec is described in a similar way to the [JSON spec](http://json.org/). Yason's structure is defined in blocks, listed below. Each block is described with a flowchart.
 
 - Rectangular boxes are used to denote nested blocks.
 - Rounded boxes are used to denote literal characters.
@@ -47,71 +61,100 @@ The YASON spec is described in a similar way to the [JSON spec](http://json.org/
 Boxes coloured in blue (`padding`, `spacing`, `whitespace` and `comment`) are optional, stylistic and do not affect the parsed data structure.
 
 ### document
+
 A document describes the structure of a parsable document (JSON does not explictly define this, but implicitly allows an array or object).
 
-![document](document.png)
+![document](diagrams/document.png)
 
 ### map(i)
+
 A map is a whitespace sensitive version of an object. `i` is number of levels of indentation items within it.
 
-![map](map.png)
+![map](diagrams/map.png)
 
 ### list(i)
+
 A list is a whitespace sensitive version of an array. `i` is number of levels of indentation items within it.
 
-![list](list.png)
+![list](diagrams/list.png)
 
 ### key
+
 A key is a quoted or unquoted string, used in the key of a map or object.
 
-![key](key.png)
+![key](diagrams/key.png)
 
 ### indent
+
 An indent-unit represents a single level of indentation, e.g. 2 spaces. This must be identical for every instance in a document.
 
-![indent](indent.png)
+![indent](diagrams/indent.png)
 
 ### object
+
 This is an unordered list of key value pairs, identical to JSON except that keys can be unquoted.
 
-![object](object.png)
+![object](diagrams/object.png)
 
 ### array
+
 This is list of values, identical to JSON.
 
-![array](array.png)
+![array](diagrams/array.png)
 
 ### value
+
 A value, identical to JSON.
 
-![value](value.png)
+![value](diagrams/value.png)
 
 ### string
+
 A string, identical to JSON.
 
-![string](string.png)
+![string](diagrams/string.png)
 
 ### number
+
 A number, identical to JSON.
 
-![number](number.png)
+![number](diagrams/number.png)
 
 ### padding
+
 Optional padding between two tokens.
 
-![padding](padding.png)
+![padding](diagrams/padding.png)
 
 ### spacing
+
 Optional blank lines between two tokens, each line can contain a comment.
 
-![spacing](spacing.png)
+![spacing](diagrams/spacing.png)
 
 ### whitespace
+
 Optional padding or spacing between two tokens.
 
-![whitespace](whitespace.png)
+![whitespace](diagrams/whitespace.png)
 
 ### comment
+
 An optional comment at the end of a line or on its own line.
 
-![comment](comment.png)
+![comment](diagrams/comment.png)
+
+## TODO
+
+- Error checking:
+  - Negative numbers with spaces
+  - Whitespace in quotes
+  - Value token after value token - bad
+  - Symbol not followed by colon
+  - Invalid style of comment "//"
+- JSON support
+- Create encoder, test against parser
+  - Replace padding in comments with whitespace (if possible)
+- Variable indentation checking
+- Create generic type for Action/ActionResult node
+- Look for ways to simplify parser given more flexible consume
