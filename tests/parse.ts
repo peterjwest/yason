@@ -104,6 +104,70 @@ describe('parse', () => {
 
   it('Parses a list', () => {
     const tokens = tokenize(multiline`
+      - "Hello \\"World\\""
+      - 123
+      - null
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), [
+      'Hello "World"',
+      123,
+      null,
+    ]);
+
+    assert.deepStrictEqual(tree.getAst(), {
+      afterWhitespace: '',
+      beforeWhitespace: '',
+      indent: '',
+      type: 'List',
+      value: [
+        {
+          afterPadding: '',
+          valuePadding: '',
+          afterWhitespace: '',
+          beforeWhitespace: '',
+          type: 'ListItem',
+          value: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Value',
+            value: 'Hello "World"',
+          },
+        },
+        {
+          afterPadding: '',
+          valuePadding: '',
+          afterWhitespace: '',
+          beforeWhitespace: '',
+          type: 'ListItem',
+          value: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Value',
+            value: 123,
+          },
+        },
+        {
+          afterPadding: '',
+          valuePadding: '',
+          afterWhitespace: '',
+          beforeWhitespace: '',
+          type: 'ListItem',
+          value: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Value',
+            value: null,
+          },
+        },
+      ],
+    });
+  });
+
+  it('Parses a list with comments', () => {
+    const tokens = tokenize(multiline`
       # Before document
       - -3.142 # Inline comment
 
@@ -171,6 +235,71 @@ describe('parse', () => {
   });
 
   it('Parses a map', () => {
+    const tokens = tokenize(multiline`
+      foo: null
+      "zig zag": "Hello World"
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), {
+      foo: null,
+      'zig zag': 'Hello World',
+    });
+
+    assert.deepStrictEqual(tree.getAst(), {
+      afterWhitespace: '',
+      beforeWhitespace: '',
+      indent: undefined,
+      type: 'Map',
+      value: [
+        {
+          afterPadding: '',
+          afterWhitespace: '',
+          beforeWhitespace: '',
+          key: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Key',
+            symbol: true,
+            value: 'foo',
+          },
+          keyPadding: '',
+          valuePadding: ' ',
+          type: 'MapItem',
+          value: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Value',
+            value: null,
+          },
+        },
+        {
+          afterPadding: '',
+          afterWhitespace: '',
+          beforeWhitespace: '',
+          key: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Key',
+            symbol: false,
+            value: 'zig zag',
+          },
+          keyPadding: '',
+          valuePadding: ' ',
+          type: 'MapItem',
+          value: {
+            afterWhitespace: '',
+            beforeWhitespace: '',
+            type: 'Value',
+            value: 'Hello World',
+          },
+        },
+      ],
+    });
+  });
+
+  it('Parses a map with comments', () => {
     const tokens = tokenize(multiline`
       # Before document
       foo: null
