@@ -10,7 +10,8 @@ describe('ValueNode', () => {
     assert.deepStrictEqual(node.getAst(), {
       afterWhitespace: '',
       beforeWhitespace: '',
-      type: 'Value',
+      type: 'Key',
+      symbol: false,
       value: 'some "string!"',
     });
   });
@@ -21,7 +22,8 @@ describe('ValueNode', () => {
     assert.deepStrictEqual(node.getAst(), {
       afterWhitespace: '',
       beforeWhitespace: '',
-      type: 'Value',
+      type: 'Key',
+      symbol: true,
       value: 'some_symbol',
     });
   });

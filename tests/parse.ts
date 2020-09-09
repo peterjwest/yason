@@ -105,9 +105,7 @@ describe('parse', () => {
   it('Parses a list', () => {
     const tokens = tokenize(multiline`
       # Before document
-      - "Hello \\"World\\""
       - -3.142 # Inline comment
-      - true
 
       # Section comment
       - false
@@ -118,9 +116,7 @@ describe('parse', () => {
     const tree = parse(tokens);
 
     assert.deepStrictEqual(tree.getData(), [
-      'Hello "World"',
       -3.142,
-      true,
       false,
       null,
     ]);
@@ -132,19 +128,6 @@ describe('parse', () => {
       type: 'List',
       value: [
         {
-          afterPadding: '',
-          valuePadding: '',
-          afterWhitespace: '',
-          beforeWhitespace: '',
-          type: 'ListItem',
-          value: {
-            afterWhitespace: '',
-            beforeWhitespace: '',
-            type: 'Value',
-            value: 'Hello "World"',
-          },
-        },
-        {
           afterPadding: ' # Inline comment',
           valuePadding: '',
           afterWhitespace: '',
@@ -155,19 +138,6 @@ describe('parse', () => {
             beforeWhitespace: '',
             type: 'Value',
             value: -3.142,
-          },
-        },
-        {
-          afterPadding: '',
-          valuePadding: '',
-          afterWhitespace: '',
-          beforeWhitespace: '',
-          type: 'ListItem',
-          value: {
-            afterWhitespace: '',
-            beforeWhitespace: '',
-            type: 'Value',
-            value: true,
           },
         },
         {
@@ -233,12 +203,12 @@ describe('parse', () => {
           key: {
             afterWhitespace: '',
             beforeWhitespace: '',
-            type: 'Value',
+            type: 'Key',
+            symbol: true,
             value: 'foo',
           },
           keyPadding: '',
           valuePadding: ' ',
-          keyType: 'SymbolToken',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
@@ -254,12 +224,12 @@ describe('parse', () => {
           key: {
             afterWhitespace: '',
             beforeWhitespace: '',
-            type: 'Value',
+            type: 'Key',
+            symbol: true,
             value: 'bar',
           },
           keyPadding: '',
           valuePadding: ' ',
-          keyType: 'SymbolToken',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
@@ -275,12 +245,12 @@ describe('parse', () => {
           key: {
             afterWhitespace: '',
             beforeWhitespace: '',
-            type: 'Value',
+            type: 'Key',
+            symbol: false,
             value: 'zig zag',
           },
           keyPadding: ' ',
           valuePadding: '',
-          keyType: 'StringToken',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
@@ -364,12 +334,12 @@ describe('parse', () => {
                 key: {
                   afterWhitespace: '',
                   beforeWhitespace: '',
-                  type: 'Value',
+                  type: 'Key',
+                  symbol: true,
                   value: 'foo',
                 },
                 keyPadding: '',
                 valuePadding: ' ',
-                keyType: 'SymbolToken',
                 type: 'MapItem',
                 value: {
                   afterWhitespace: '',
@@ -385,12 +355,12 @@ describe('parse', () => {
                 key: {
                   afterWhitespace: '',
                   beforeWhitespace: '',
-                  type: 'Value',
+                  type: 'Key',
+                  symbol: true,
                   value: 'bar',
                 },
                 keyPadding: '',
                 valuePadding: '# Key comment',
-                keyType: 'SymbolToken',
                 type: 'MapItem',
                 value: {
                   afterWhitespace: '',
@@ -460,11 +430,11 @@ describe('parse', () => {
                 key: {
                   afterWhitespace: '',
                   beforeWhitespace: '',
-                  type: 'Value',
+                  type: 'Key',
+                  symbol: true,
                   value: 'zim',
                 },
                 keyPadding: '',
-                keyType: 'SymbolToken',
                 type: 'MapItem',
                 value: {
                   afterWhitespace: '',
@@ -479,11 +449,11 @@ describe('parse', () => {
                       key: {
                         afterWhitespace: '',
                         beforeWhitespace: '',
-                        type: 'Value',
+                        type: 'Key',
+                        symbol: true,
                         value: 'gir',
                       },
                       keyPadding: '',
-                      keyType: 'SymbolToken',
                       type: 'MapItem',
                       value: {
                         afterWhitespace: '',

@@ -3,7 +3,8 @@ import Node from './Node';
 
 /** Value AST structure */
 export interface KeyAst {
-  type: 'Value';
+  type: 'Key';
+  symbol: boolean;
   beforeWhitespace: string;
   afterWhitespace: string;
   value: string;
@@ -14,10 +15,12 @@ export default class KeyNode extends Node<''> {
   beforeWhitespace = '';
   afterWhitespace = '';
   value: string;
+  symbol: boolean;
 
   constructor(token: StringToken | SymbolToken) {
     super();
     this.value = token instanceof StringToken ? JSON.parse(token.value) : token.value;
+    this.symbol = token instanceof SymbolToken;
   }
 
   /** Get raw value */
@@ -28,7 +31,8 @@ export default class KeyNode extends Node<''> {
   /** ValueNode AST structure */
   getAst(): KeyAst {
     return {
-      type: 'Value',
+      type: 'Key',
+      symbol: this.symbol,
       beforeWhitespace: this.beforeWhitespace,
       afterWhitespace: this.afterWhitespace,
       value: this.value,

@@ -121,7 +121,6 @@ export default class MapNode extends Node<MapNodeState> {
         ) {
           const item = new MapItemNode();
           item.key = new KeyNode(tokens[0]);
-          item.keyType = tokens[0] instanceof StringToken ? 'StringToken' : 'SymbolToken';
 
           const lastItem = this.value[this.value.length - 1];
           if (lastItem) {
@@ -312,7 +311,6 @@ interface MapItemAst {
   afterPadding: string;
   keyPadding: string;
   valuePadding: string;
-  keyType: 'StringToken' | 'SymbolToken';
   key: KeyAst;
   value: ListAst | MapAst | ValueAst;
 }
@@ -326,7 +324,6 @@ export class MapItemNode {
   valuePadding = '';
   key: KeyNode;
   value: ListNode | MapNode | ValueNode;
-  keyType: 'StringToken' | 'SymbolToken';
 
   /** Get raw data for the map value */
   getData() {
@@ -342,7 +339,6 @@ export class MapItemNode {
       afterPadding: this.afterPadding,
       keyPadding: this.keyPadding,
       valuePadding: this.valuePadding,
-      keyType: this.keyType,
       key: this.key.getAst(),
       value: this.value.getAst(),
     };
