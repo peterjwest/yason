@@ -1,4 +1,4 @@
-# Yason
+# Yason [![npm version][npm-badge]][npm-url] [![build status][circle-badge]][circle-url] [![coverage status][coverage-badge]][coverage-url]
 
 Yason is a lightweight data-interchange format. It is designed to be easy for humans and machines to write and understand.
 
@@ -158,3 +158,12 @@ An optional comment at the end of a line or on its own line.
 - Variable indentation checking
 - Create generic type for Action/ActionResult node
 - Look for ways to simplify parser given more flexible consume
+
+[npm-badge]: https://badge.fury.io/js/yason.svg
+[npm-url]: https://www.npmjs.com/package/yason
+
+[circle-badge]: https://circleci.com/gh/peterjwest/yason.svg?style=shield
+[circle-url]: https://circleci.com/gh/peterjwest/yason
+
+[coverage-badge]: https://coveralls.io/repos/peterjwest/yason/badge.svg?branch=main&service=github
+[coverage-url]: https://coveralls.io/github/peterjwest/yason?branch=main
