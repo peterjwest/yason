@@ -146,15 +146,16 @@ An optional comment at the end of a line or on its own line.
 
 ## TODO
 
-- Error checking:
+- Add helpful parse error messages:
   - Negative numbers with spaces
   - Whitespace in quotes
   - Value token after value token - bad
   - Symbol not followed by colon
   - Invalid style of comment "//"
+  - Single quotes
 - JSON support
 - Create encoder, test against parser
-  - Replace padding in comments with whitespace (if possible)
+- Replace padding properties with beforeWhitespace/afterWhitespace
 - Variable indentation checking
 - Create generic type for Action/ActionResult node
 - Look for ways to simplify parser given more flexible consume
