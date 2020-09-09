@@ -92,31 +92,31 @@ An indent-unit represents a single level of indentation, e.g. 2 spaces. This mus
 
 ### object
 
-This is an unordered list of key value pairs, identical to JSON except that keys can be unquoted.
+This is an unordered list of key value pairs, identical to JSON except that keys can be unquoted, and comments are allowed.
 
 ![object](diagrams/object.png)
 
 ### array
 
-This is list of values, identical to JSON.
+This is list of values, identical to JSON except comments are allowed.
 
 ![array](diagrams/array.png)
 
 ### value
 
-A value, identical to JSON.
+A value, identical to JSON except comments are allowed.
 
 ![value](diagrams/value.png)
 
 ### string
 
-A string, identical to JSON.
+A string, identical to JSON except comments are allowed.
 
 ![string](diagrams/string.png)
 
 ### number
 
-A number, identical to JSON.
+A number, identical to JSON except comments are allowed.
 
 ![number](diagrams/number.png)
 
@@ -125,6 +125,12 @@ A number, identical to JSON.
 Optional padding between two tokens.
 
 ![padding](diagrams/padding.png)
+
+### comment
+
+An optional comment at the end of a line or on its own line.
+
+![comment](diagrams/comment.png)
 
 ### spacing
 
@@ -137,12 +143,6 @@ Optional blank lines between two tokens, each line can contain a comment.
 Optional padding or spacing between two tokens.
 
 ![whitespace](diagrams/whitespace.png)
-
-### comment
-
-An optional comment at the end of a line or on its own line.
-
-![comment](diagrams/comment.png)
 
 ## TODO
 
