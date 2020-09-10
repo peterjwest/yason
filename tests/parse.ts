@@ -120,14 +120,12 @@ describe('parse', () => {
     assert.deepStrictEqual(tree.getAst(), {
       afterWhitespace: '',
       beforeWhitespace: '',
-      indent: '',
       type: 'List',
       value: [
         {
-          afterPadding: '',
-          valuePadding: '',
           afterWhitespace: '',
           beforeWhitespace: '',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -137,10 +135,9 @@ describe('parse', () => {
           },
         },
         {
-          afterPadding: '',
-          valuePadding: '',
           afterWhitespace: '',
           beforeWhitespace: '',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -150,10 +147,9 @@ describe('parse', () => {
           },
         },
         {
-          afterPadding: '',
-          valuePadding: '',
           afterWhitespace: '',
           beforeWhitespace: '',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -188,14 +184,12 @@ describe('parse', () => {
     assert.deepStrictEqual(tree.getAst(), {
       afterWhitespace: '\n# After document',
       beforeWhitespace: '# Before document\n',
-      indent: '',
       type: 'List',
       value: [
         {
-          afterPadding: ' # Inline comment',
-          valuePadding: '',
-          afterWhitespace: '',
+          afterWhitespace: ' # Inline comment',
           beforeWhitespace: '',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -205,10 +199,9 @@ describe('parse', () => {
           },
         },
         {
-          afterPadding: '',
-          valuePadding: '',
           afterWhitespace: '',
           beforeWhitespace: '\n\n# Section comment',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -218,10 +211,9 @@ describe('parse', () => {
           },
         },
         {
-          afterPadding: '',
-          valuePadding: ' ',
           afterWhitespace: '',
           beforeWhitespace: '',
+          middleWhitespace: ' ',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -250,47 +242,40 @@ describe('parse', () => {
     assert.deepStrictEqual(tree.getAst(), {
       afterWhitespace: '',
       beforeWhitespace: '',
-      indent: undefined,
       type: 'Map',
       value: [
         {
-          afterPadding: '',
           afterWhitespace: '',
           beforeWhitespace: '',
           key: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            middleWhitespace: '',
             type: 'Key',
             symbol: true,
             value: 'foo',
           },
-          keyPadding: '',
-          valuePadding: ' ',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            beforeWhitespace: ' ',
             type: 'Value',
             value: null,
           },
         },
         {
-          afterPadding: '',
           afterWhitespace: '',
           beforeWhitespace: '',
           key: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            middleWhitespace: '',
             type: 'Key',
             symbol: false,
             value: 'zig zag',
           },
-          keyPadding: '',
-          valuePadding: ' ',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            beforeWhitespace: ' ',
             type: 'Value',
             value: 'Hello World',
           },
@@ -303,7 +288,7 @@ describe('parse', () => {
     const tokens = tokenize(multiline`
       # Before document
       foo: null
-      bar: "Hello World"
+      bar: "Hello World" # Inline comment
 
       # Section comment
       "zig zag" :3.142
@@ -322,64 +307,54 @@ describe('parse', () => {
     assert.deepStrictEqual(tree.getAst(), {
       afterWhitespace: '\n# After document\n',
       beforeWhitespace: '# Before document\n',
-      indent: undefined,
       type: 'Map',
       value: [
         {
-          afterPadding: '',
           afterWhitespace: '',
           beforeWhitespace: '',
           key: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            middleWhitespace: '',
             type: 'Key',
             symbol: true,
             value: 'foo',
           },
-          keyPadding: '',
-          valuePadding: ' ',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            beforeWhitespace: ' ',
             type: 'Value',
             value: null,
           },
         },
         {
-          afterPadding: '',
-          afterWhitespace: '',
+          afterWhitespace: ' # Inline comment',
           beforeWhitespace: '',
           key: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            middleWhitespace: '',
             type: 'Key',
             symbol: true,
             value: 'bar',
           },
-          keyPadding: '',
-          valuePadding: ' ',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            beforeWhitespace: ' ',
             type: 'Value',
             value: 'Hello World',
           },
         },
         {
-          afterPadding: '',
           afterWhitespace: '',
           beforeWhitespace: '\n\n# Section comment',
           key: {
             afterWhitespace: '',
-            beforeWhitespace: '',
+            middleWhitespace: ' ',
             type: 'Key',
             symbol: false,
             value: 'zig zag',
           },
-          keyPadding: ' ',
-          valuePadding: '',
           type: 'MapItem',
           value: {
             afterWhitespace: '',
@@ -396,6 +371,7 @@ describe('parse', () => {
     const tokens = tokenize(multiline`
       # Before document
       - null
+      # Before list item
       - # List item comment
           foo: "Hello" # Value comment
           bar: # Key comment
@@ -403,7 +379,7 @@ describe('parse', () => {
               - -1E-3
 
               # Section comment
-              -  true # Inline comment
+              -   true # Inline comment
               -
                   - false
           zim:
@@ -428,14 +404,12 @@ describe('parse', () => {
     assert.deepStrictEqual(tree.getAst(), {
       afterWhitespace: '\n# After document\n',
       beforeWhitespace: '# Before document\n',
-      indent: '',
       type: 'List',
       value: [
         {
-          afterPadding: '',
           afterWhitespace: '',
-          valuePadding: '',
           beforeWhitespace: '',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
@@ -445,63 +419,53 @@ describe('parse', () => {
           },
         },
         {
-          afterPadding: '',
-          valuePadding: ' # List item comment',
           afterWhitespace: '',
-          beforeWhitespace: '',
+          beforeWhitespace: '\n# Before list item',
+          middleWhitespace: ' # List item comment',
           type: 'ListItem',
           value: {
             afterWhitespace: '',
             beforeWhitespace: '',
-            indent: '    ',
             type: 'Map',
             value: [
               {
-                afterPadding: ' # Value comment',
-                afterWhitespace: '',
+                afterWhitespace: ' # Value comment',
                 beforeWhitespace: '',
                 key: {
                   afterWhitespace: '',
-                  beforeWhitespace: '',
+                  middleWhitespace: '',
                   type: 'Key',
                   symbol: true,
                   value: 'foo',
                 },
-                keyPadding: '',
-                valuePadding: ' ',
                 type: 'MapItem',
                 value: {
                   afterWhitespace: '',
-                  beforeWhitespace: '',
+                  beforeWhitespace: ' ',
                   type: 'Value',
                   value: 'Hello',
                 },
               },
               {
-                afterPadding: '',
                 afterWhitespace: '',
-                beforeWhitespace: '\n        # List comment',
+                beforeWhitespace: '',
                 key: {
-                  afterWhitespace: '',
-                  beforeWhitespace: '',
+                  afterWhitespace: ' # Key comment',
+                  middleWhitespace: '',
                   type: 'Key',
                   symbol: true,
                   value: 'bar',
                 },
-                keyPadding: '',
-                valuePadding: '# Key comment',
                 type: 'MapItem',
                 value: {
                   afterWhitespace: '',
-                  beforeWhitespace: '',
-                  indent: '        ',
+                  beforeWhitespace: '\n        # List comment',
                   type: 'List',
                   value: [
                     {
-                      afterPadding: '',
-                      valuePadding: '',
                       afterWhitespace: '',
                       beforeWhitespace: '',
+                      middleWhitespace: '',
                       type: 'ListItem',
                       value: {
                         afterWhitespace: '',
@@ -511,10 +475,9 @@ describe('parse', () => {
                       },
                     },
                     {
-                      afterPadding: ' # Inline comment',
-                      valuePadding: ' ',
-                      afterWhitespace: '',
+                      afterWhitespace: ' # Inline comment',
                       beforeWhitespace: '\n\n        # Section comment',
+                      middleWhitespace: '  ',
                       type: 'ListItem',
                       value: {
                         afterWhitespace: '',
@@ -524,21 +487,18 @@ describe('parse', () => {
                       },
                     },
                     {
-                      afterPadding: '',
-                      valuePadding: '',
                       afterWhitespace: '',
                       beforeWhitespace: '',
+                      middleWhitespace: '',
                       type: 'ListItem',
                       value: {
                         afterWhitespace: '',
                         beforeWhitespace: '',
-                        indent: '            ',
                         type: 'List',
                         value: [{
-                          afterPadding: '',
-                          valuePadding: '',
                           afterWhitespace: '',
                           beforeWhitespace: '',
+                          middleWhitespace: '',
                           type: 'ListItem',
                           value: {
                             afterWhitespace: '',
@@ -553,57 +513,49 @@ describe('parse', () => {
                 },
               },
               {
-                afterPadding: '',
                 afterWhitespace: '',
                 beforeWhitespace: '',
                 key: {
                   afterWhitespace: '',
-                  beforeWhitespace: '',
+                  middleWhitespace: '',
                   type: 'Key',
                   symbol: true,
                   value: 'zim',
                 },
-                keyPadding: '',
                 type: 'MapItem',
                 value: {
                   afterWhitespace: '',
                   beforeWhitespace: '',
-                  indent: '        ',
                   type: 'Map',
                   value: [
                     {
-                      afterPadding: '',
                       afterWhitespace: '',
                       beforeWhitespace: '',
                       key: {
                         afterWhitespace: '',
-                        beforeWhitespace: '',
+                        middleWhitespace: '',
                         type: 'Key',
                         symbol: true,
                         value: 'gir',
                       },
-                      keyPadding: '',
                       type: 'MapItem',
                       value: {
                         afterWhitespace: '',
-                        beforeWhitespace: '',
+                        beforeWhitespace: ' ',
                         type: 'Value',
                         value: true,
                       },
-                      valuePadding: ' ',
                     },
                   ],
                 },
-                valuePadding: '',
               },
             ],
           },
         },
         {
-          afterPadding: '',
           afterWhitespace: '',
-          valuePadding: '',
           beforeWhitespace: '',
+          middleWhitespace: '',
           type: 'ListItem',
           value: {
             afterWhitespace: '',

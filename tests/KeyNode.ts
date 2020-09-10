@@ -3,13 +3,13 @@ import assert from 'assert';
 import { StringToken, SymbolToken } from '../src/tokens';
 import KeyNode from '../src/KeyNode';
 
-describe('ValueNode', () => {
+describe('KeyNode', () => {
   it('Creates the correct value for a string token', () => {
     const node = new KeyNode(new StringToken('"some \\"string!\\""'));
     assert.strictEqual(node.getData(), 'some "string!"');
     assert.deepStrictEqual(node.getAst(), {
       afterWhitespace: '',
-      beforeWhitespace: '',
+      middleWhitespace: '',
       type: 'Key',
       symbol: false,
       value: 'some "string!"',
@@ -21,7 +21,7 @@ describe('ValueNode', () => {
     assert.strictEqual(node.getData(), 'some_symbol');
     assert.deepStrictEqual(node.getAst(), {
       afterWhitespace: '',
-      beforeWhitespace: '',
+      middleWhitespace: '',
       type: 'Key',
       symbol: true,
       value: 'some_symbol',

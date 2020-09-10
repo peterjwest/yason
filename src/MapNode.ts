@@ -30,7 +30,6 @@ export interface MapAst {
   type: 'Map';
   beforeWhitespace: string;
   afterWhitespace: string;
-  indent: string;
   value: MapItemAst[];
 }
 
@@ -40,7 +39,6 @@ export default class MapNode extends Node<MapNodeState> {
   beforeWhitespace = '';
   afterWhitespace = '';
   nesting: number;
-  indent: string;
   value: MapItemNode[] = [];
 
   constructor(nesting: number) {
@@ -67,7 +65,6 @@ export default class MapNode extends Node<MapNodeState> {
       type: 'Map',
       beforeWhitespace: this.beforeWhitespace,
       afterWhitespace: this.afterWhitespace,
-      indent: this.indent,
       value: this.value.map((item) => item.getAst()),
     };
   }
@@ -88,7 +85,6 @@ export default class MapNode extends Node<MapNodeState> {
           if (tokens[0].value.length % 4 !== 0) {
             throw Error('Invalid indent');
           }
-          this.indent = tokens[0].value;
           if (this.nesting !== tokens[0].value.length / 4) {
             throw Error('Invalid indent');
           }
@@ -116,22 +112,29 @@ export default class MapNode extends Node<MapNodeState> {
         ],
         action: function(
           this: MapNode,
-          tokens:
-            [StringToken | SymbolToken, ColonToken] | [StringToken | SymbolToken, PaddingToken, ColonToken],
+          tokens: (
+            | [StringToken | SymbolToken, ColonToken]
+            | [StringToken | SymbolToken, PaddingToken, ColonToken]
+          ),
         ) {
           const item = new MapItemNode();
           item.key = new KeyNode(tokens[0]);
 
+          // TODO: Do this as post processing??
+          // Move whitespace to next item to be more meaningful
           const lastItem = this.value[this.value.length - 1];
           if (lastItem) {
-            item.beforeWhitespace = lastItem.afterWhitespace;
-            lastItem.afterWhitespace = '';
+            const index = lastItem.afterWhitespace.indexOf('\n');
+            if (index !== -1) {
+              item.beforeWhitespace = lastItem.afterWhitespace.slice(index);
+              lastItem.afterWhitespace = lastItem.afterWhitespace.slice(0, index);
+            }
           }
 
           this.value.push(item);
 
           if (tokens[1] instanceof PaddingToken) {
-            item.keyPadding = tokens[1].value;
+            item.key.middleWhitespace = tokens[1].value;
           }
           this.state = 'beforeValue';
           return { consumed: tokens.length };
@@ -141,33 +144,39 @@ export default class MapNode extends Node<MapNodeState> {
 
     beforeValue: [
       {
-        pattern: [oneOf([PaddingToken, CommentToken])],
+        pattern: [PaddingToken.optional(), PrimitiveToken],
         action: function(
           this: MapNode,
-          tokens: [PaddingToken | CommentToken],
+          tokens: (
+            | [TrueToken | FalseToken | NullToken | NumberToken | StringToken]
+            | [PaddingToken, TrueToken | FalseToken | NullToken | NumberToken | StringToken]
+          ),
         ) {
           const item = this.value[this.value.length - 1];
-          item.valuePadding = tokens[0].value;
-          return { consumed: tokens.length };
-        },
-      },
-      {
-        pattern: [PrimitiveToken],
-        action: function(
-          this: MapNode,
-          tokens: [TrueToken | FalseToken | NullToken | NumberToken | StringToken],
-        ) {
-          const item = this.value[this.value.length - 1];
-          item.value = new ValueNode(tokens[0]);
+          item.value = new ValueNode(tokens[tokens.length - 1]);
+          item.value.beforeWhitespace = tokens[0] instanceof PaddingToken ? tokens[0].value : '';
           this.state = 'afterValue';
           return { consumed: tokens.length };
         },
       },
+
       {
-        pattern: [NewlineToken],
-        action: function(this: MapNode, tokens: [NewlineToken]) {
+        pattern: [PaddingToken.optional(), CommentToken.optional(), NewlineToken],
+        action: function(
+          this: MapNode,
+          tokens: (
+            | [NewlineToken]
+            | [PaddingToken | CommentToken, NewlineToken]
+            | [PaddingToken | CommentToken, PaddingToken | CommentToken, NewlineToken]
+          ),
+        ) {
+          const whitespaceTokens = tokens.slice(0, -1);
+
+          const item = this.value[this.value.length - 1];
+          item.key.afterWhitespace = whitespaceTokens.map((token) => token.value).join('');
+
           this.state = 'beforeNestedValue';
-          return {};
+          return { consumed: whitespaceTokens.length };
         },
       },
     ],
@@ -180,8 +189,16 @@ export default class MapNode extends Node<MapNodeState> {
         ) {
           const item = this.value[this.value.length - 1];
           item.value = new MapNode(this.nesting + 1);
-          // item.value.beforeWhitespace = item.afterWhitespace;
-          // item.afterWhitespace = '';
+
+          // TODO: Do this as post processing??
+          // Move whitespace additional lines to item value
+          const index = item.afterWhitespace.indexOf('\n');
+          if (index !== -1) {
+            item.value.beforeWhitespace += item.afterWhitespace.slice(index);
+            item.beforeWhitespace += item.afterWhitespace.slice(0, index);
+            item.afterWhitespace = '';
+          }
+
           this.state = 'afterNestedValue';
           return { push: item.value };
         },
@@ -191,8 +208,16 @@ export default class MapNode extends Node<MapNodeState> {
         action: function(this: MapNode, tokens: [NewlineToken, PaddingToken, DashToken]) {
           const item = this.value[this.value.length - 1];
           item.value = new ListNode(this.nesting + 1);
-          // item.value.beforeWhitespace = item.afterWhitespace;
-          // item.afterWhitespace = '';
+
+          // TODO: Do this as post processing??
+          // Move whitespace additional lines to item value
+          const index = item.afterWhitespace.indexOf('\n');
+          if (index !== -1) {
+            item.value.beforeWhitespace += item.afterWhitespace.slice(index);
+            item.beforeWhitespace += item.afterWhitespace.slice(0, index);
+            item.afterWhitespace = '';
+          }
+
           this.state = 'afterNestedValue';
           return { push: item.value };
         },
@@ -204,7 +229,7 @@ export default class MapNode extends Node<MapNodeState> {
           tokens: Array<PaddingToken | CommentToken | NewlineToken>,
         ) {
           const item = this.value[this.value.length - 1];
-          item.beforeWhitespace += tokens.map((token) => token.value).join('');
+          item.afterWhitespace += tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
       },
@@ -218,7 +243,7 @@ export default class MapNode extends Node<MapNodeState> {
           tokens: [PaddingToken | CommentToken],
         ) {
           const item = this.value[this.value.length - 1];
-          item.afterPadding += tokens[0].value;
+          item.afterWhitespace += tokens[0].value;
           return { consumed: tokens.length };
         },
       },
@@ -235,10 +260,6 @@ export default class MapNode extends Node<MapNodeState> {
       {
         pattern: [],
         action: function(this: MapNode, tokens: []) {
-          const item = this.value[this.value.length - 1];
-          item.afterWhitespace = item.value.afterWhitespace;
-          item.value.afterWhitespace = '';
-
           this.state = 'afterItem';
           return {};
         },
@@ -270,9 +291,12 @@ export default class MapNode extends Node<MapNodeState> {
           }
 
           if (this.nesting > indentLength / 4) {
+            // TODO: Do this as post processing?
+            // We're leaving this map, so hoist the whitespace from this item to the map
             const item = this.value[this.value.length - 1];
             this.afterWhitespace = item.afterWhitespace;
             item.afterWhitespace = '';
+
             return { pop: true };
           }
 
@@ -293,9 +317,12 @@ export default class MapNode extends Node<MapNodeState> {
       {
         pattern: [EndToken],
         action: function(this: MapNode, tokens: [EndToken]) {
+          // TODO: Do this as post processing?
+          // We're ending the document, so hoist the whitespace from this item to the map
           const item = this.value[this.value.length - 1];
           this.afterWhitespace = item.afterWhitespace;
           item.afterWhitespace = '';
+
           return { pop: true };
         },
       },
@@ -308,9 +335,6 @@ interface MapItemAst {
   type: 'MapItem';
   beforeWhitespace: string;
   afterWhitespace: string;
-  afterPadding: string;
-  keyPadding: string;
-  valuePadding: string;
   key: KeyAst;
   value: ListAst | MapAst | ValueAst;
 }
@@ -319,9 +343,6 @@ interface MapItemAst {
 export class MapItemNode {
   beforeWhitespace = '';
   afterWhitespace = '';
-  afterPadding = '';
-  keyPadding = '';
-  valuePadding = '';
   key: KeyNode;
   value: ListNode | MapNode | ValueNode;
 
@@ -336,9 +357,6 @@ export class MapItemNode {
       type: 'MapItem',
       beforeWhitespace: this.beforeWhitespace,
       afterWhitespace: this.afterWhitespace,
-      afterPadding: this.afterPadding,
-      keyPadding: this.keyPadding,
-      valuePadding: this.valuePadding,
       key: this.key.getAst(),
       value: this.value.getAst(),
     };

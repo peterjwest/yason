@@ -5,14 +5,14 @@ import Node from './Node';
 export interface KeyAst {
   type: 'Key';
   symbol: boolean;
-  beforeWhitespace: string;
+  middleWhitespace: string;
   afterWhitespace: string;
   value: string;
 }
 
 /** Node to hold primitive values */
 export default class KeyNode extends Node<''> {
-  beforeWhitespace = '';
+  middleWhitespace = '';
   afterWhitespace = '';
   value: string;
   symbol: boolean;
@@ -33,7 +33,7 @@ export default class KeyNode extends Node<''> {
     return {
       type: 'Key',
       symbol: this.symbol,
-      beforeWhitespace: this.beforeWhitespace,
+      middleWhitespace: this.middleWhitespace,
       afterWhitespace: this.afterWhitespace,
       value: this.value,
     };
