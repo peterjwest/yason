@@ -1,19 +1,19 @@
+import pickBy from 'lodash/pickBy';
+import identity from 'lodash/identity';
+
 import { TrueToken, FalseToken, NullToken, NumberToken, StringToken } from './tokens';
-import Node from './Node';
+import Node, { WhitespaceAst } from './Node';
 import { JsonPrimitive } from './Json';
 
 /** Value AST structure */
 export interface ValueAst {
   type: 'Value';
-  beforeWhitespace: string;
-  afterWhitespace: string;
+  whitespace: WhitespaceAst;
   value: JsonPrimitive;
 }
 
 /** Node to hold primitive values */
 export default class ValueNode extends Node<''> {
-  beforeWhitespace = '';
-  afterWhitespace = '';
   value: boolean | null | number | string;
 
   constructor(token: TrueToken | FalseToken | NullToken | NumberToken | StringToken) {
@@ -38,8 +38,7 @@ export default class ValueNode extends Node<''> {
   getAst(): ValueAst {
     return {
       type: 'Value',
-      beforeWhitespace: this.beforeWhitespace,
-      afterWhitespace: this.afterWhitespace,
+      whitespace: pickBy(this.whitespace, identity),
       value: this.value,
     };
   }

@@ -16,6 +16,17 @@ export interface ActionResult {
   consumed?: number;
 }
 
+/** Whitespace structure for all nodes */
+export interface Whitespace {
+  before: string;
+  inner: string;
+  after: string;
+}
+
+/** Whitespace output structure, allowing missing properties */
+export type WhitespaceAst = Partial<Whitespace>;
+
+
 /** Check if a set of tokens matches a pattern of tokens */
 export function matchesPattern(tokens: Token[], pattern: Token[]) {
   let length = 0;
@@ -33,6 +44,11 @@ export function matchesPattern(tokens: Token[], pattern: Token[]) {
 
 /** Base Node structure to represent any yason structure */
 export default class Node<State extends string> {
+  whitespace: Whitespace = {
+    before: '',
+    inner: '',
+    after: '',
+  };
   state: State;
 
   /** Get possible actions given a state */

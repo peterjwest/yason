@@ -5,7 +5,7 @@ import {
   SymbolToken, ColonToken, DashToken,
   CommentToken, PaddingToken, NewlineToken,
 } from './tokens';
-import Node, { ActionResult } from './Node';
+import Node, { ActionResult, WhitespaceAst } from './Node';
 import ListNode, { ListAst } from './ListNode';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
@@ -16,16 +16,13 @@ export type DocumentNodeState = 'beforeValue' | 'afterValue';
 /** Document AST structure */
 export interface DocumentAst {
   type: 'Document';
-  beforeWhitespace: string;
-  afterWhitespace: string;
+  whitespace: WhitespaceAst;
   value: MapAst | ListAst | ValueAst;
 }
 
 /** Node representing a yason document */
 export default class DocumentNode extends Node<DocumentNodeState> {
   state: DocumentNodeState = 'beforeValue';
-  beforeWhitespace = '';
-  afterWhitespace = '';
   value: MapNode | ListNode | ValueNode;
 
   /** Get possible actions given a state */
@@ -44,9 +41,9 @@ export default class DocumentNode extends Node<DocumentNodeState> {
           this.value = new MapNode(0);
 
           // Move whitespace to child node, so that DocumentNode can be discarded
-          if (this.beforeWhitespace) {
-            this.value.beforeWhitespace = this.beforeWhitespace;
-            this.beforeWhitespace = '';
+          if (this.whitespace.before) {
+            this.value.whitespace.before = this.whitespace.before;
+            this.whitespace.before = '';
           }
 
           this.state = 'afterValue';
@@ -59,9 +56,9 @@ export default class DocumentNode extends Node<DocumentNodeState> {
           this.value = new ListNode(0);
 
           // Move whitespace to child node, so that DocumentNode can be discarded
-          if (this.beforeWhitespace) {
-            this.value.beforeWhitespace = this.beforeWhitespace;
-            this.beforeWhitespace = '';
+          if (this.whitespace.before) {
+            this.value.whitespace.before = this.whitespace.before;
+            this.whitespace.before = '';
           }
 
           this.state = 'afterValue';
@@ -76,9 +73,9 @@ export default class DocumentNode extends Node<DocumentNodeState> {
           this.value = new ValueNode(tokens[0]);
 
           // Move whitespace to child node, so that DocumentNode can be discarded
-          if (this.beforeWhitespace) {
-            this.value.beforeWhitespace = this.beforeWhitespace;
-            this.beforeWhitespace = '';
+          if (this.whitespace.before) {
+            this.value.whitespace.before = this.whitespace.before;
+            this.whitespace.before = '';
           }
 
           this.state = 'afterValue';
@@ -90,7 +87,7 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         action: function(
           this: DocumentNode, tokens: Array<PaddingToken | CommentToken | NewlineToken>,
         ): ActionResult {
-          this.beforeWhitespace += tokens.map((token) => token.value).join('');
+          this.whitespace.before = this.whitespace.before + tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
       },
@@ -102,7 +99,8 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         action: function(
           this: DocumentNode, tokens: [PaddingToken | NewlineToken | CommentToken],
         ): ActionResult {
-          this.value.afterWhitespace += tokens.map((token) => token.value).join('');
+          const whitespace = tokens.map((token) => token.value).join('');
+          this.value.whitespace.after = this.value.whitespace.after + whitespace;
           return { consumed: tokens.length };
         },
       },

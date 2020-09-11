@@ -8,8 +8,7 @@ describe('KeyNode', () => {
     const node = new KeyNode(new StringToken('"some \\"string!\\""'));
     assert.strictEqual(node.getData(), 'some "string!"');
     assert.deepStrictEqual(node.getAst(), {
-      afterWhitespace: '',
-      middleWhitespace: '',
+      whitespace: {},
       type: 'Key',
       symbol: false,
       value: 'some "string!"',
@@ -20,8 +19,7 @@ describe('KeyNode', () => {
     const node = new KeyNode(new SymbolToken('some_symbol'));
     assert.strictEqual(node.getData(), 'some_symbol');
     assert.deepStrictEqual(node.getAst(), {
-      afterWhitespace: '',
-      middleWhitespace: '',
+      whitespace: {},
       type: 'Key',
       symbol: true,
       value: 'some_symbol',

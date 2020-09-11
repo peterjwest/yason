@@ -1,19 +1,19 @@
+import pickBy from 'lodash/pickBy';
+import identity from 'lodash/identity';
+
 import { StringToken, SymbolToken } from './tokens';
-import Node from './Node';
+import Node, { WhitespaceAst } from './Node';
 
 /** Value AST structure */
 export interface KeyAst {
   type: 'Key';
   symbol: boolean;
-  middleWhitespace: string;
-  afterWhitespace: string;
+  whitespace: WhitespaceAst;
   value: string;
 }
 
 /** Node to hold primitive values */
 export default class KeyNode extends Node<''> {
-  middleWhitespace = '';
-  afterWhitespace = '';
   value: string;
   symbol: boolean;
 
@@ -33,8 +33,7 @@ export default class KeyNode extends Node<''> {
     return {
       type: 'Key',
       symbol: this.symbol,
-      middleWhitespace: this.middleWhitespace,
-      afterWhitespace: this.afterWhitespace,
+      whitespace: pickBy(this.whitespace, identity),
       value: this.value,
     };
   }

@@ -1,3 +1,6 @@
+import pickBy from 'lodash/pickBy';
+import identity from 'lodash/identity';
+
 import {
   EndToken, PrimitiveToken, oneOf,
   TrueToken, FalseToken, NullToken,
@@ -5,7 +8,7 @@ import {
   SymbolToken, DashToken,
   CommentToken, PaddingToken, NewlineToken,
 } from './tokens';
-import Node, { Action } from './Node';
+import Node, { Action, WhitespaceAst } from './Node';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
 import { JsonList } from './Json';
@@ -24,17 +27,13 @@ type ListNodeState = (
 /** List AST structure */
 export interface ListAst {
   type: 'List';
-  beforeWhitespace: string;
-  afterWhitespace: string;
+  whitespace: WhitespaceAst;
   value: ListItemAst[];
 }
 
 /** Node reprsenting a list (array) */
 export default class ListNode extends Node<ListNodeState> {
   state: ListNodeState = 'beforeIndent';
-  beforeWhitespace = '';
-  afterWhitespace = '';
-  middleWhitespace = '';
   nesting: number;
   value: ListItemNode[] = [];
 
@@ -57,8 +56,7 @@ export default class ListNode extends Node<ListNodeState> {
   getAst(): ListAst {
     return {
       type: 'List',
-      beforeWhitespace: this.beforeWhitespace,
-      afterWhitespace: this.afterWhitespace,
+      whitespace: pickBy(this.whitespace, identity),
       value: this.value.map((node) => node.getAst()),
     };
   }
@@ -104,11 +102,11 @@ export default class ListNode extends Node<ListNodeState> {
 
           // Move whitespace to next item to be more meaningful
           const lastItem = this.value[this.value.length - 1];
-          if (lastItem) {
-            const index = lastItem.afterWhitespace.indexOf('\n');
+          if (lastItem && lastItem.whitespace.after) {
+            const index = lastItem.whitespace.after.indexOf('\n');
             if (index !== -1) {
-              item.beforeWhitespace = lastItem.afterWhitespace.slice(index);
-              lastItem.afterWhitespace = lastItem.afterWhitespace.slice(0, index);
+              item.whitespace.before = lastItem.whitespace.after.slice(index);
+              lastItem.whitespace.after = lastItem.whitespace.after.slice(0, index);
             }
           }
 
@@ -129,7 +127,7 @@ export default class ListNode extends Node<ListNodeState> {
         ) {
           const item = this.value[this.value.length - 1];
           item.value = new ValueNode(tokens[1]);
-          item.middleWhitespace = tokens[0].value.slice(1);
+          item.whitespace.inner = tokens[0].value.slice(1);
           this.state = 'afterValue';
           return { consumed: tokens.length };
         },
@@ -147,7 +145,7 @@ export default class ListNode extends Node<ListNodeState> {
           const whitespaceTokens = tokens.slice(0, -1);
 
           const item = this.value[this.value.length - 1];
-          item.middleWhitespace = whitespaceTokens.map((token) => token.value).join('');
+          item.whitespace.inner = whitespaceTokens.map((token) => token.value).join('');
 
           this.state = 'beforeNestedValue';
           return { consumed: whitespaceTokens.length };
@@ -164,10 +162,12 @@ export default class ListNode extends Node<ListNodeState> {
 
           // TODO: Do this as post processing?
           // Move whitespace additional lines to item value
-          const index = item.middleWhitespace.indexOf('\n');
-          if (index !== -1) {
-            item.value.beforeWhitespace = item.middleWhitespace.slice(index);
-            item.middleWhitespace = item.middleWhitespace.slice(0, index);
+          if (item.whitespace.inner) {
+            const index = item.whitespace.inner.indexOf('\n');
+            if (index !== -1) {
+              item.value.whitespace.before = item.whitespace.inner.slice(index);
+              item.whitespace.inner = item.whitespace.inner.slice(0, index);
+            }
           }
 
           this.state = 'afterNestedValue';
@@ -182,10 +182,12 @@ export default class ListNode extends Node<ListNodeState> {
 
           // TODO: Do this as post processing?
           // Move whitespace additional lines to item value
-          const index = item.middleWhitespace.indexOf('\n');
-          if (index !== -1) {
-            item.value.beforeWhitespace = item.middleWhitespace.slice(index);
-            item.middleWhitespace = item.middleWhitespace.slice(0, index);
+          if (item.whitespace.inner) {
+            const index = item.whitespace.inner.indexOf('\n');
+            if (index !== -1) {
+              item.value.whitespace.before = item.whitespace.inner.slice(index);
+              item.whitespace.inner = item.whitespace.inner.slice(0, index);
+            }
           }
 
           this.state = 'afterNestedValue';
@@ -199,7 +201,7 @@ export default class ListNode extends Node<ListNodeState> {
           tokens: Array<PaddingToken | CommentToken | NewlineToken>,
         ) {
           const item = this.value[this.value.length - 1];
-          item.afterWhitespace += tokens.map((token) => token.value).join('');
+          item.whitespace.after = item.whitespace.after + tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
       },
@@ -210,7 +212,7 @@ export default class ListNode extends Node<ListNodeState> {
         pattern: [oneOf([PaddingToken, CommentToken])],
         action: function(this: ListNode, tokens: [PaddingToken | CommentToken]) {
           const item = this.value[this.value.length - 1];
-          item.afterWhitespace += tokens[0].value;
+          item.whitespace.after = item.whitespace.after + tokens[0].value;
           return { consumed: tokens.length };
         },
       },
@@ -261,8 +263,8 @@ export default class ListNode extends Node<ListNodeState> {
             // TODO: Do this as post processing?
             // We're leaving this list, so hoist the whitespace from this item to the list
             const item = this.value[this.value.length - 1];
-            this.afterWhitespace = item.afterWhitespace;
-            item.afterWhitespace = '';
+            this.whitespace.after = item.whitespace.after;
+            item.whitespace.after = '';
 
             return { pop: true };
           }
@@ -277,7 +279,7 @@ export default class ListNode extends Node<ListNodeState> {
           tokens: Array<PaddingToken | CommentToken | NewlineToken>,
         ) {
           const item = this.value[this.value.length - 1];
-          item.afterWhitespace += tokens.map((token) => token.value).join('');
+          item.whitespace.after = item.whitespace.after + tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
       },
@@ -287,8 +289,8 @@ export default class ListNode extends Node<ListNodeState> {
           // TODO: Do this as post processing?
           // We're ending the document, so hoist the whitespace from this item to the map
           const item = this.value[this.value.length - 1];
-          this.afterWhitespace = item.afterWhitespace;
-          item.afterWhitespace = '';
+          this.whitespace.after = item.whitespace.after;
+          item.whitespace.after = '';
 
           return { pop: true };
         },
@@ -300,17 +302,12 @@ export default class ListNode extends Node<ListNodeState> {
 /** ListItem AST structure */
 interface ListItemAst {
   type: 'ListItem';
-  beforeWhitespace: string;
-  afterWhitespace: string;
-  middleWhitespace: string;
+  whitespace: WhitespaceAst;
   value: ListAst | MapAst | ValueAst;
 }
 
 /** Node representing a list item */
-class ListItemNode {
-  beforeWhitespace = '';
-  afterWhitespace = '';
-  middleWhitespace = '';
+class ListItemNode extends Node<''> {
   value: ListNode | MapNode | ValueNode;
 
   /** Get raw data for the list item value */
@@ -322,9 +319,7 @@ class ListItemNode {
   getAst(): ListItemAst {
     return {
       type: 'ListItem',
-      beforeWhitespace: this.beforeWhitespace,
-      afterWhitespace: this.afterWhitespace,
-      middleWhitespace: this.middleWhitespace,
+      whitespace: pickBy(this.whitespace, identity),
       value: this.value.getAst(),
     };
   }
