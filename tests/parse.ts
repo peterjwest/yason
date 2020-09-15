@@ -155,7 +155,7 @@ describe('parse', () => {
 
       # Section comment
       - false
-      -  null
+      -  null# Final item comment
       # After document
     `);
 
@@ -187,7 +187,7 @@ describe('parse', () => {
         },
         {
           whitespace: {
-            before: '\n\n# Section comment',
+            before: '\n# Section comment\n',
           },
           type: 'ListItem',
           value: {
@@ -199,6 +199,7 @@ describe('parse', () => {
         {
           whitespace: {
             inner: ' ',
+            after: '# Final item comment',
           },
           type: 'ListItem',
           value: {
@@ -211,9 +212,203 @@ describe('parse', () => {
     });
   });
 
+  it('Parses a nested list', () => {
+    const tokens = tokenize(multiline`
+      - "Hello"
+      -
+          - 123
+          -
+              - 456
+              - 789
+      - true
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), [
+      'Hello',
+      [123, [456, 789]],
+      true,
+    ]);
+
+    assert.deepStrictEqual(tree.getAst(), {
+      type: 'List',
+      value: [
+        {
+          type: 'ListItem',
+          value: {
+            type: 'Value',
+            value: 'Hello',
+            whitespace: {},
+          },
+          whitespace: {},
+        },
+        {
+          type: 'ListItem',
+          value: {
+            type: 'List',
+            value: [
+              {
+                type: 'ListItem',
+                value: {
+                  type: 'Value',
+                  value: 123,
+                  whitespace: {},
+                },
+                whitespace: {},
+              },
+              {
+                type: 'ListItem',
+                value: {
+                  type: 'List',
+                  value: [
+                    {
+                      type: 'ListItem',
+                      value: {
+                        type: 'Value',
+                        value: 456,
+                        whitespace: {},
+                      },
+                      whitespace: {},
+                    },
+                    {
+                      type: 'ListItem',
+                      value: {
+                        type: 'Value',
+                        value: 789,
+                        whitespace: {},
+                      },
+                      whitespace: {},
+                    },
+                  ],
+                  whitespace: {},
+                },
+                whitespace: {},
+              },
+            ],
+            whitespace: {},
+          },
+          whitespace: {},
+        },
+        {
+          type: 'ListItem',
+          value: {
+            type: 'Value',
+            value: true,
+            whitespace: {},
+          },
+          whitespace: {},
+        },
+      ],
+      whitespace: {},
+    });
+  });
+
+  it('Parses a nested list with comments', () => {
+    const tokens = tokenize(multiline`
+      # Before comment
+      - "Hello" # Inline comment
+      - # List item comment
+          - 123
+          -
+              # List block comment
+              - 456 # Nested item comment
+              - 789 # Final nested item comment
+      - true # Final item comment
+      # After comment
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), [
+      'Hello',
+      [123, [456, 789]],
+      true,
+    ]);
+
+    assert.deepStrictEqual(tree.getAst(), {
+      type: 'List',
+      whitespace: {
+        after: '\n# After comment',
+        before: '# Before comment\n',
+      },
+      value: [
+        {
+          type: 'ListItem',
+          whitespace: { after: ' # Inline comment' },
+          value: {
+            type: 'Value',
+            value: 'Hello',
+            whitespace: {},
+          },
+        },
+        {
+          type: 'ListItem',
+          whitespace: {
+            inner: ' # List item comment',
+          },
+          value: {
+            type: 'List',
+            whitespace: {},
+            value: [
+              {
+                type: 'ListItem',
+                value: {
+                  type: 'Value',
+                  value: 123,
+                  whitespace: {},
+                },
+                whitespace: {},
+              },
+              {
+                type: 'ListItem',
+                whitespace: {},
+                value: {
+                  type: 'List',
+                  whitespace: { before: '        # List block comment\n' },
+                  value: [
+                    {
+                      type: 'ListItem',
+                      whitespace: { after: ' # Nested item comment' },
+                      value: {
+                        type: 'Value',
+                        value: 456,
+                        whitespace: {},
+                      },
+                    },
+                    {
+                      type: 'ListItem',
+                      whitespace: { after: ' # Final nested item comment' },
+                      value: {
+                        type: 'Value',
+                        value: 789,
+                        whitespace: {},
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          type: 'ListItem',
+          whitespace: {
+            after: ' # Final item comment',
+          },
+          value: {
+            type: 'Value',
+            value: true,
+            whitespace: {},
+          },
+        },
+      ],
+    });
+  });
+
   it('Parses a map', () => {
     const tokens = tokenize(multiline`
-      foo: null
+      foo:null
       "zig zag": "Hello World"
     `);
 
@@ -238,9 +433,7 @@ describe('parse', () => {
           },
           type: 'MapItem',
           value: {
-            whitespace: {
-              before: ' ',
-            },
+            whitespace: {},
             type: 'Value',
             value: null,
           },
@@ -273,7 +466,7 @@ describe('parse', () => {
       bar: "Hello World" # Inline comment
 
       # Section comment
-      "zig zag" :3.142
+      "zig zag" :3.142 # Final inline comment
       # After document
 
     `);
@@ -287,13 +480,14 @@ describe('parse', () => {
     });
 
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Map',
       whitespace: {
         before: '# Before document\n',
         after: '\n# After document\n',
       },
-      type: 'Map',
       value: [
         {
+          type: 'MapItem',
           whitespace: {},
           key: {
             whitespace: {},
@@ -301,7 +495,6 @@ describe('parse', () => {
             symbol: true,
             value: 'foo',
           },
-          type: 'MapItem',
           value: {
             whitespace: {
               before: ' ',
@@ -311,6 +504,7 @@ describe('parse', () => {
           },
         },
         {
+          type: 'MapItem',
           whitespace: {
             after: ' # Inline comment',
           },
@@ -320,7 +514,6 @@ describe('parse', () => {
             symbol: true,
             value: 'bar',
           },
-          type: 'MapItem',
           value: {
             whitespace: {
               before: ' ',
@@ -330,8 +523,10 @@ describe('parse', () => {
           },
         },
         {
+          type: 'MapItem',
           whitespace: {
-            before: '\n\n# Section comment',
+            before: '\n# Section comment\n',
+            after: ' # Final inline comment',
           },
           key: {
             whitespace: {
@@ -341,7 +536,6 @@ describe('parse', () => {
             symbol: false,
             value: 'zig zag',
           },
-          type: 'MapItem',
           value: {
             whitespace: {},
             type: 'Value',
@@ -352,172 +546,106 @@ describe('parse', () => {
     });
   });
 
-  it('Parses nested lists and maps', () => {
+  it('Parses a nested map', () => {
     const tokens = tokenize(multiline`
-      # Before document
-      - null
-      # Before list item
-      - # List item comment
-          foo: "Hello" # Value comment
-          bar: # Key comment
-              # List comment
-              - -1E-3
-
-              # Section comment
-              -   true # Inline comment
-              -
-                  - false
+      foo: "Hello"
+      bar:
           zim:
-              gir: true
-      - 123
-      # After document
-
+              gir: 123
+              zig: 1E5
+      zip: true
     `);
 
     const tree = parse(tokens);
 
-    assert.deepStrictEqual(tree.getData(), [
-      null,
-      {
-        foo: 'Hello',
-        bar: [-1E-3, true, [false]],
-        zim: { gir: true },
-      },
-      123,
-    ]);
+    assert.deepStrictEqual(tree.getData(), {
+      foo: 'Hello',
+      bar: { zim: {
+        gir: 123,
+        zig: 1e5,
+      }},
+      zip: true,
+    });
 
     assert.deepStrictEqual(tree.getAst(), {
-      whitespace: {
-        before: '# Before document\n',
-        after: '\n# After document\n',
-      },
-      type: 'List',
+      type: 'Map',
+      whitespace: {},
       value: [
         {
-          whitespace: {},
-          type: 'ListItem',
-          value: {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'foo',
             whitespace: {},
-            type: 'Value',
-            value: null,
           },
+          type: 'MapItem',
+          value: {
+            type: 'Value',
+            value: 'Hello',
+            whitespace: {
+              before: ' ',
+            },
+          },
+          whitespace: {},
         },
         {
-          whitespace: {
-            before: '\n# Before list item',
-            inner: ' # List item comment',
-          },
-          type: 'ListItem',
-          value: {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'bar',
             whitespace: {},
+          },
+          type: 'MapItem',
+          whitespace: {},
+          value: {
             type: 'Map',
+            whitespace: {},
             value: [
               {
-                whitespace: {
-                  after: ' # Value comment',
-                },
                 key: {
-                  whitespace: {},
-                  type: 'Key',
                   symbol: true,
-                  value: 'foo',
-                },
-                type: 'MapItem',
-                value: {
-                  whitespace: {
-                    before: ' ',
-                  },
-                  type: 'Value',
-                  value: 'Hello',
-                },
-              },
-              {
-                whitespace: {},
-                key: {
-                  whitespace: {
-                    after: ' # Key comment',
-                  },
                   type: 'Key',
-                  symbol: true,
-                  value: 'bar',
-                },
-                type: 'MapItem',
-                value: {
-                  whitespace: {
-                    before: '\n        # List comment',
-                  },
-                  type: 'List',
-                  value: [
-                    {
-                      whitespace: {},
-                      type: 'ListItem',
-                      value: {
-                        whitespace: {},
-                        type: 'Value',
-                        value: -0.001,
-                      },
-                    },
-                    {
-                      whitespace: {
-                        before: '\n\n        # Section comment',
-                        inner: '  ',
-                        after: ' # Inline comment',
-                      },
-                      type: 'ListItem',
-                      value: {
-                        whitespace: {},
-                        type: 'Value',
-                        value: true,
-                      },
-                    },
-                    {
-                      whitespace: {},
-                      type: 'ListItem',
-                      value: {
-                        whitespace: {},
-                        type: 'List',
-                        value: [{
-                          whitespace: {},
-                          type: 'ListItem',
-                          value: {
-                            whitespace: {},
-                            type: 'Value',
-                            value: false,
-                          },
-                        }],
-                      },
-                    },
-                  ],
-                },
-              },
-              {
-                whitespace: {},
-                key: {
-                  whitespace: {},
-                  type: 'Key',
-                  symbol: true,
                   value: 'zim',
+                  whitespace: {},
                 },
                 type: 'MapItem',
+                whitespace: {},
                 value: {
-                  whitespace: {},
                   type: 'Map',
+                  whitespace: {},
                   value: [
                     {
-                      whitespace: {},
                       key: {
-                        whitespace: {},
-                        type: 'Key',
                         symbol: true,
+                        type: 'Key',
                         value: 'gir',
+                        whitespace: {},
                       },
                       type: 'MapItem',
+                      whitespace: {},
                       value: {
+                        type: 'Value',
+                        value: 123,
                         whitespace: {
                           before: ' ',
                         },
+                      },
+                    },
+                    {
+                      key: {
+                        symbol: true,
+                        type: 'Key',
+                        value: 'zig',
+                        whitespace: {},
+                      },
+                      type: 'MapItem',
+                      whitespace: {},
+                      value: {
                         type: 'Value',
-                        value: true,
+                        value: 100000,
+                        whitespace: {
+                          before: ' ',
+                        },
                       },
                     },
                   ],
@@ -527,30 +655,373 @@ describe('parse', () => {
           },
         },
         {
-          whitespace: {},
-          type: 'ListItem',
-          value: {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'zip',
             whitespace: {},
+          },
+          type: 'MapItem',
+          whitespace: {},
+          value: {
             type: 'Value',
-            value: 123,
+            value: true,
+            whitespace: {
+              before: ' ',
+            },
           },
         },
       ],
     });
   });
 
-  // TODO: Fix this test
-  // it('XXX', () => {
-  //   const tokens = tokenize(multiline`
-  //     "zig zag": 123
-  //   `);
+  it('Parses a nested map with comments', () => {
+    const tokens = tokenize(multiline`
+      foo: "Hello"
+      bar: # Key comment
+        # Block comment
+          zim:
+              gir: 123
+              zig: 1E5 # Final nested item comment
+      zip: true # Final item comment
+    `);
 
-  //   const tree = parse(tokens);
+    const tree = parse(tokens);
 
-  //   assert.deepStrictEqual(tree.getData(), {
-  //     foo: null,
-  //     bar: 'Hello World',
-  //     'zig zag': 3.142,
-  //   });
-  // });
+    assert.deepStrictEqual(tree.getData(), {
+      foo: 'Hello',
+      bar: { zim: {
+        gir: 123,
+        zig: 1e5,
+      }},
+      zip: true,
+    });
+
+    assert.deepStrictEqual(tree.getAst(), {
+      type: 'Map',
+      whitespace: {},
+      value: [
+        {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'foo',
+            whitespace: {},
+          },
+          type: 'MapItem',
+          value: {
+            type: 'Value',
+            value: 'Hello',
+            whitespace: {
+              before: ' ',
+            },
+          },
+          whitespace: {},
+        },
+        {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'bar',
+            whitespace: { after: ' # Key comment' },
+          },
+          type: 'MapItem',
+          whitespace: {},
+          value: {
+            type: 'Map',
+            whitespace: { before: '  # Block comment\n' },
+            value: [
+              {
+                key: {
+                  symbol: true,
+                  type: 'Key',
+                  value: 'zim',
+                  whitespace: {},
+                },
+                type: 'MapItem',
+                whitespace: {},
+                value: {
+                  type: 'Map',
+                  whitespace: {},
+                  value: [
+                    {
+                      key: {
+                        symbol: true,
+                        type: 'Key',
+                        value: 'gir',
+                        whitespace: {},
+                      },
+                      type: 'MapItem',
+                      whitespace: {},
+                      value: {
+                        type: 'Value',
+                        value: 123,
+                        whitespace: {
+                          before: ' ',
+                        },
+                      },
+                    },
+                    {
+                      key: {
+                        symbol: true,
+                        type: 'Key',
+                        value: 'zig',
+                        whitespace: {},
+                      },
+                      type: 'MapItem',
+                      whitespace: { after: ' # Final nested item comment' },
+                      value: {
+                        type: 'Value',
+                        value: 100000,
+                        whitespace: {
+                          before: ' ',
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'zip',
+            whitespace: {},
+          },
+          type: 'MapItem',
+          whitespace: { after: ' # Final item comment' },
+          value: {
+            type: 'Value',
+            value: true,
+            whitespace: {
+              before: ' ',
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it('Parses a list nested in a map', () => {
+    const tokens = tokenize(multiline`
+      foo: "Hi"
+      bar:
+          - 1
+          - 2
+          - 3
+      zim: "Hey"
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), {
+      foo: 'Hi',
+      bar: [1, 2, 3],
+      zim: 'Hey',
+    });
+
+    assert.deepStrictEqual(tree.getAst(), {
+      type: 'Map',
+      whitespace: {},
+      value: [
+        {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'foo',
+            whitespace: {},
+          },
+          type: 'MapItem',
+          whitespace: {},
+          value: {
+            type: 'Value',
+            value: 'Hi',
+            whitespace: {
+              before: ' ',
+            },
+          },
+        },
+        {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'bar',
+            whitespace: {},
+          },
+          type: 'MapItem',
+          whitespace: {},
+          value: {
+            type: 'List',
+            whitespace: {},
+            value: [
+              {
+                type: 'ListItem',
+                whitespace: {},
+                value: {
+                  type: 'Value',
+                  value: 1,
+                  whitespace: {},
+                },
+              },
+              {
+                type: 'ListItem',
+                whitespace: {},
+                value: {
+                  type: 'Value',
+                  value: 2,
+                  whitespace: {},
+                },
+              },
+              {
+                type: 'ListItem',
+                whitespace: {},
+                value: {
+                  type: 'Value',
+                  value: 3,
+                  whitespace: {},
+                },
+              },
+            ],
+          },
+        },
+        {
+          key: {
+            symbol: true,
+            type: 'Key',
+            value: 'zim',
+            whitespace: {},
+          },
+          type: 'MapItem',
+          whitespace: {},
+          value: {
+            type: 'Value',
+            value: 'Hey',
+            whitespace: {
+              before: ' ',
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it('Parses a list nested in a map', () => {
+    const tokens = tokenize(multiline`
+      - "Hi"
+      -
+          foo: 1
+          bar: 2
+          zim: 3
+      - "Hey"
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), [
+      'Hi',
+      { foo: 1, bar: 2, zim: 3 },
+      'Hey',
+    ]);
+
+    assert.deepStrictEqual(tree.getAst(), {
+      type: 'List',
+      whitespace: {},
+      value: [
+        {
+          type: 'ListItem',
+          whitespace: {},
+          value: {
+            type: 'Value',
+            whitespace: {},
+            value: 'Hi',
+          },
+        },
+        {
+          type: 'ListItem',
+          whitespace: {},
+          value: {
+            type: 'Map',
+            whitespace: {},
+            value: [
+              {
+                type: 'MapItem',
+                whitespace: {},
+                key: {
+                  symbol: true,
+                  type: 'Key',
+                  value: 'foo',
+                  whitespace: {},
+                },
+                value: {
+                  type: 'Value',
+                  value: 1,
+                  whitespace: {
+                    before: ' ',
+                  },
+                },
+              },
+              {
+                type: 'MapItem',
+                whitespace: {},
+                key: {
+                  symbol: true,
+                  type: 'Key',
+                  value: 'bar',
+                  whitespace: {},
+                },
+                value: {
+                  type: 'Value',
+                  value: 2,
+                  whitespace: {
+                    before: ' ',
+                  },
+                },
+              },
+              {
+                type: 'MapItem',
+                whitespace: {},
+                key: {
+                  symbol: true,
+                  type: 'Key',
+                  value: 'zim',
+                  whitespace: {},
+                },
+                value: {
+                  type: 'Value',
+                  value: 3,
+                  whitespace: {
+                    before: ' ',
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          type: 'ListItem',
+          whitespace: {},
+          value: {
+            type: 'Value',
+            value: 'Hey',
+            whitespace: {},
+          },
+        },
+      ],
+    });
+  });
+
+  it('Parses a map starting with a string', () => {
+    const tokens = tokenize(multiline`
+      "zig zag": 3.142
+    `);
+
+    const tree = parse(tokens);
+
+    assert.deepStrictEqual(tree.getData(), {
+      'zig zag': 3.142,
+    });
+  });
 });

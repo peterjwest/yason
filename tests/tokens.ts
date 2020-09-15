@@ -5,7 +5,7 @@ import {
   TrueToken, FalseToken, NullToken, NumberToken, StringToken,
   SymbolToken, ColonToken, DashToken, CommaToken,
   CurlyOpenToken, CurlyCloseToken, SquareOpenToken, SquareCloseToken,
-  CommentToken, PaddingToken, NewlineToken,
+  LineEndToken, PaddingToken, NewlineToken,
 } from '../src/tokens';
 
 describe('tokens', () => {
@@ -343,26 +343,25 @@ describe('tokens', () => {
     });
   });
 
-  describe('CommentToken', () => {
+  describe('LineEndToken', () => {
     describe('parse', () => {
       it('Parses a comment', () => {
-        assert.deepStrictEqual(CommentToken.parse('# some comment! #:\😈'), new CommentToken('# some comment! #:\😈'));
+        assert.deepStrictEqual(
+          LineEndToken.parse('  # some comment! #:\😈'),
+          new LineEndToken('  # some comment! #:\😈'),
+        );
       });
 
       it('Parses a comment followed by a newline', () => {
-        assert.deepStrictEqual(CommentToken.parse('# some comment! \n'), new CommentToken('# some comment! '));
+        assert.deepStrictEqual(LineEndToken.parse('# some comment! \n'), new LineEndToken('# some comment! '));
       });
 
       it('Parses an empty comment', () => {
-        assert.deepStrictEqual(CommentToken.parse('#'), new CommentToken('#'));
-      });
-
-      it('Does not parse a comment token after whitespace', () => {
-        assert.strictEqual(CommentToken.parse(' # some comment!'), undefined);
+        assert.deepStrictEqual(LineEndToken.parse('#'), new LineEndToken('#'));
       });
 
       it('Does not parse an invalid style of comment', () => {
-        assert.strictEqual(CommentToken.parse('// some comment'), undefined);
+        assert.strictEqual(LineEndToken.parse('  // some comment'), undefined);
       });
     });
   });
@@ -374,7 +373,7 @@ describe('tokens', () => {
       });
 
       it('Parses a padding token made of tabs and spaces', () => {
-        assert.deepStrictEqual(PaddingToken.parse(' \t  \t \n  '), new PaddingToken(' \t  \t '));
+        assert.deepStrictEqual(PaddingToken.parse(' \t  \t - 123'), new PaddingToken(' \t  \t '));
       });
 
       it('Does not parse a padding token after whitespace', () => {

@@ -1,4 +1,4 @@
-import { max } from 'lodash';
+import max from 'lodash/max';
 
 import { Token, OptionalToken } from './tokens';
 
@@ -27,8 +27,24 @@ export interface Whitespace {
 export type WhitespaceAst = Partial<Whitespace>;
 
 
+/** Check if a set of tokens could match a pattern, given more tokens */
+export function couldMatchPattern(tokens: Token[], pattern: Token[]) {
+  let length = 0;
+  for (const token of pattern) {
+    if (!tokens[length]) break;
+
+    if (!token.matches(tokens[length])) {
+      if (token instanceof OptionalToken) continue;
+      else return false;
+    }
+    length++;
+  }
+  return true;
+}
+
+
 /** Check if a set of tokens matches a pattern of tokens */
-export function matchesPattern(tokens: Token[], pattern: Token[]) {
+export function matchesPattern(tokens: Token[], pattern: Token[]): number | undefined {
   let length = 0;
   for (const token of pattern) {
     if (!tokens[length]) return undefined;
@@ -60,17 +76,34 @@ export default class Node<State extends string> {
   runNextAction(tokens: Token[]) {
     const actions = this.getActions(this.state);
 
-    let result: ActionResult | undefined;
-    let length: number | undefined;
-    for (const { pattern, action } of actions) {
-      length = matchesPattern(tokens, pattern);
-
-      if (length !== undefined) {
-        result = action.call(this, tokens.slice(0, length));
-        break;
-      }
+    /** A matched action and the number of tokens that matched */
+    interface Match {
+      length: number;
+      /** Matched action function */
+      action(this: Node<State>, tokens: Token[]): ActionResult;
     }
-    return { result, length };
+
+    const possibleMatches = (
+      actions
+      .filter(({ pattern }) => pattern.length > 0 && couldMatchPattern(tokens, pattern))
+    );
+
+    const matches: Match[] = (
+      possibleMatches
+      .map(({ pattern, action }) => ({ length: matchesPattern(tokens, pattern), action }))
+      .filter((match): match is Match => match.length !== undefined)
+    );
+
+    const finalAction = actions.find(({ pattern }) => pattern.length === 0);
+    if (possibleMatches.length === 0 && finalAction) {
+      matches.push({ length: 0, action: finalAction.action });
+    }
+
+    if (matches.length === 1 && possibleMatches.length <= 1) {
+      const length = matches[0].length;
+      const result: ActionResult = matches[0].action.call(this, tokens.slice(0, length));
+      return { result, length: length };
+    }
   }
 
   /** Count the maximum number of tokens which can be matched by the Node in this state */

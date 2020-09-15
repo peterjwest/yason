@@ -24,19 +24,19 @@ export default function parse(tokens: Token[]) {
     // TODO: Remove
     // console.log(current.constructor.name, current.state, currentTokens);
 
-    const { result, length } = current.runNextAction(currentTokens);
+    const response = current.runNextAction(currentTokens);
 
-    if (result) {
-      if (result.pop) stack.pop();
-      if (result.push) stack.push(result.push);
-      if (result.consumed !== undefined) {
-        if (length && result.consumed > length) {
+    if (response) {
+      if (response.result.pop) stack.pop();
+      if (response.result.push) stack.push(response.result.push);
+      if (response.result.consumed !== undefined) {
+        if (response.length && response.result.consumed > response.length) {
           throw Error(
             `Parse error in ${current.constructor.name} ${current.state},` +
-            `attempted to consume more tokens (${result.consumed}) than available (${length})`,
+            `attempted to consume more tokens (${response.result.consumed}) than available (${response.length})`,
           );
         }
-        startIndex = startIndex + result.consumed || 0;
+        startIndex = startIndex + response.result.consumed || 0;
       }
       if (startIndex > endIndex) endIndex++;
     } else {

@@ -5,14 +5,14 @@ import {
   TrueToken, FalseToken, NullToken, NumberToken, StringToken,
   SymbolToken, ColonToken, DashToken, CommaToken,
   CurlyOpenToken, CurlyCloseToken, SquareOpenToken, SquareCloseToken,
-  CommentToken, PaddingToken, NewlineToken,
+  LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
 
 const parseableTokens = [
   TrueToken, FalseToken, NullToken, NumberToken, StringToken,
   SymbolToken, ColonToken, DashToken, CommaToken,
   CurlyOpenToken, CurlyCloseToken, SquareOpenToken, SquareCloseToken,
-  CommentToken, PaddingToken, NewlineToken,
+  LineEndToken, PaddingToken, NewlineToken,
 ];
 
 // TODO: Use a generator!

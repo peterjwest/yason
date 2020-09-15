@@ -6,7 +6,7 @@ import {
   StringToken, NumberToken, TrueToken, FalseToken, NullToken,
   SymbolToken, ColonToken, DashToken, CommaToken,
   SquareOpenToken, SquareCloseToken, CurlyOpenToken, CurlyCloseToken,
-  PaddingToken, NewlineToken, CommentToken, EndToken,
+  PaddingToken, NewlineToken, LineEndToken, EndToken,
 } from '../src/tokens';
 
 describe('tokenize', () => {
@@ -40,13 +40,13 @@ describe('tokenize', () => {
     `;
     assert.deepStrictEqual(tokenize(input), [
       new SymbolToken('foo'), new ColonToken(), new PaddingToken('  '), new StringToken('"bar"'),
-      new PaddingToken(' '), new CommentToken('# inline comment'), new NewlineToken(),
+      new LineEndToken(' # inline comment'), new NewlineToken(),
 
       new StringToken('"zim"'), new PaddingToken(' '), new ColonToken(),
       new NumberToken('123'), new NewlineToken(),
 
       new SymbolToken('gir'), new ColonToken(), new NullToken(),
-      new CommentToken('#no padding comment'), new NewlineToken(),
+      new LineEndToken('#no padding comment'), new NewlineToken(),
 
       new EndToken(),
     ]);
@@ -64,7 +64,7 @@ describe('tokenize', () => {
 
       new DashToken(), new PaddingToken(' '), new StringToken('"hey y\'all"'), new NewlineToken(),
 
-      new PaddingToken('   '), new CommentToken('#  comment line'), new NewlineToken(),
+      new LineEndToken('   #  comment line'), new NewlineToken(),
 
       new DashToken(), new PaddingToken(' '), new NumberToken('01134'), new EndToken(),
     ]);
@@ -81,7 +81,7 @@ describe('tokenize', () => {
     `;
     assert.deepStrictEqual(tokenize(input), [
       new SquareOpenToken(),
-      new PaddingToken(' '), new CommentToken('# inline comment'), new NewlineToken(),
+      new LineEndToken(' # inline comment'), new NewlineToken(),
 
       new PaddingToken('  '), new StringToken('"foo"'), new PaddingToken(' '), new CommaToken(),
       new StringToken('"bar"'), new CommaToken(), new NewlineToken(),
@@ -110,7 +110,7 @@ describe('tokenize', () => {
 
       new PaddingToken('    '), new StringToken('"foo"'), new PaddingToken(' '), new ColonToken(),
       new StringToken('"bar"'), new CommaToken(),
-      new PaddingToken('   '), new CommentToken('# comment after padding'), new NewlineToken(),
+      new LineEndToken('   # comment after padding'), new NewlineToken(),
 
       new PaddingToken('  '), new SymbolToken('zim'), new ColonToken(),
       new PaddingToken(' '), new NumberToken('0.123'), new CommaToken(),
@@ -152,7 +152,7 @@ describe('tokenize', () => {
       new PaddingToken(' '), new NumberToken('-42'), new NewlineToken(),
 
       new PaddingToken('  '), new DashToken(),
-      new PaddingToken(' '), new CommentToken('# comment A'), new NewlineToken(),
+      new LineEndToken(' # comment A'), new NewlineToken(),
 
       new PaddingToken('    '), new SymbolToken('beep'), new ColonToken(),
       new PaddingToken(' '), new StringToken('"boop"'), new NewlineToken(),
@@ -163,7 +163,7 @@ describe('tokenize', () => {
       new StringToken('"gir"'), new ColonToken(),
       new PaddingToken(' '), new NumberToken('.123'), new NewlineToken(),
 
-      new CommentToken('# comment B'), new NewlineToken(),
+      new LineEndToken('# comment B'), new NewlineToken(),
 
       new SymbolToken('zip'), new ColonToken(),
       new PaddingToken(' '), new CurlyOpenToken(), new NewlineToken(),
@@ -177,7 +177,7 @@ describe('tokenize', () => {
       new PaddingToken(' '), new SquareOpenToken(), new NewlineToken(),
 
       new PaddingToken('     '), new TrueToken(), new CommaToken(),
-      new PaddingToken(' '), new CommentToken('# comment C'), new NewlineToken(),
+      new LineEndToken(' # comment C'), new NewlineToken(),
 
       new PaddingToken('     '), new FalseToken(), new CommaToken(), new NewlineToken(),
 

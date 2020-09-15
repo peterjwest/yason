@@ -6,7 +6,7 @@ import {
   TrueToken, FalseToken, NullToken,
   NumberToken, StringToken,
   SymbolToken, DashToken,
-  CommentToken, PaddingToken, NewlineToken,
+  LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
 import Node, { Action, WhitespaceAst } from './Node';
 import MapNode, { MapAst } from './MapNode';
@@ -20,7 +20,6 @@ type ListNodeState = (
   | 'beforeValue'
   | 'afterValue'
   | 'beforeNestedValue'
-  | 'afterNestedValue'
   | 'afterItem'
 );
 
@@ -64,32 +63,18 @@ export default class ListNode extends Node<ListNodeState> {
   static actions: { [key: string]: Array<Action<ListNodeState>> } = {
     beforeIndent: [
       {
-        pattern: [NewlineToken],
-        action: function(this: ListNode, tokens: [NewlineToken]) {
-          return { consumed: tokens.length };
-        },
-      },
-      {
-        pattern: [PaddingToken],
-        action: function(this: ListNode, tokens: [PaddingToken]) {
+        pattern: [PaddingToken.optional()],
+        action: function(this: ListNode, tokens: [] | [PaddingToken]) {
           // TODO: More sophisticaed indent checking i.e. tabs
-          if (tokens[0].value.length % 4 !== 0) {
+          const indentLength = tokens[0] ? tokens[0].value.length : 0;
+          if (indentLength % 4 !== 0) {
             throw Error('Invalid indent');
           }
-          if (this.nesting !== tokens[0].value.length / 4) {
+          if (this.nesting !== indentLength / 4) {
             throw Error('Invalid indent');
           }
           this.state = 'beforeKey';
           return { consumed: tokens.length };
-        },
-      },
-      {
-        pattern: [],
-        action: function(this: ListNode, tokens: []) {
-          if (this.nesting === 0) {
-            this.state = 'beforeKey';
-          }
-          return {};
         },
       },
     ],
@@ -105,7 +90,7 @@ export default class ListNode extends Node<ListNodeState> {
           if (lastItem && lastItem.whitespace.after) {
             const index = lastItem.whitespace.after.indexOf('\n');
             if (index !== -1) {
-              item.whitespace.before = lastItem.whitespace.after.slice(index);
+              item.whitespace.before += lastItem.whitespace.after.slice(index + 1);
               lastItem.whitespace.after = lastItem.whitespace.after.slice(0, index);
             }
           }
@@ -127,81 +112,67 @@ export default class ListNode extends Node<ListNodeState> {
         ) {
           const item = this.value[this.value.length - 1];
           item.value = new ValueNode(tokens[1]);
-          item.whitespace.inner = tokens[0].value.slice(1);
+          item.whitespace.inner += tokens[0].value.slice(1);
           this.state = 'afterValue';
           return { consumed: tokens.length };
         },
       },
       {
-        pattern: [PaddingToken.optional(), CommentToken.optional(), NewlineToken],
+        pattern: [LineEndToken.optional(), NewlineToken],
         action: function(
           this: ListNode,
-          tokens: (
-            | [NewlineToken]
-            | [PaddingToken | CommentToken, NewlineToken]
-            | [PaddingToken | CommentToken, PaddingToken | CommentToken, NewlineToken]
-          ),
+          tokens: Array<LineEndToken | NewlineToken>,
         ) {
-          const whitespaceTokens = tokens.slice(0, -1);
-
           const item = this.value[this.value.length - 1];
-          item.whitespace.inner = whitespaceTokens.map((token) => token.value).join('');
+          item.whitespace.inner += tokens[0] instanceof LineEndToken ? tokens[0].value : '';
 
           this.state = 'beforeNestedValue';
-          return { consumed: whitespaceTokens.length };
+          return { consumed: tokens.length };
         },
       },
     ],
 
     beforeNestedValue: [
       {
-        pattern: [NewlineToken, PaddingToken, DashToken],
-        action: function(this: ListNode, tokens: [NewlineToken, PaddingToken, DashToken]) {
+        pattern: [PaddingToken, DashToken],
+        action: function(this: ListNode, tokens: [PaddingToken, DashToken]) {
           const item = this.value[this.value.length - 1];
           item.value = new ListNode(this.nesting + 1);
 
-          // TODO: Do this as post processing?
           // Move whitespace additional lines to item value
-          if (item.whitespace.inner) {
-            const index = item.whitespace.inner.indexOf('\n');
-            if (index !== -1) {
-              item.value.whitespace.before = item.whitespace.inner.slice(index);
-              item.whitespace.inner = item.whitespace.inner.slice(0, index);
-            }
+          if (item.whitespace.after) {
+            item.value.whitespace.before += item.whitespace.after;
+            item.whitespace.after = '';
           }
 
-          this.state = 'afterNestedValue';
+          this.state = 'afterItem';
           return { push: item.value };
         },
       },
       {
-        pattern: [NewlineToken, PaddingToken, oneOf([StringToken, SymbolToken])],
-        action: function(this: ListNode, tokens: [NewlineToken, PaddingToken, StringToken | SymbolToken]) {
+        pattern: [PaddingToken, oneOf([StringToken, SymbolToken])],
+        action: function(this: ListNode, tokens: [PaddingToken, StringToken | SymbolToken]) {
           const item = this.value[this.value.length - 1];
           item.value = new MapNode(this.nesting + 1);
 
-          // TODO: Do this as post processing?
           // Move whitespace additional lines to item value
-          if (item.whitespace.inner) {
-            const index = item.whitespace.inner.indexOf('\n');
-            if (index !== -1) {
-              item.value.whitespace.before = item.whitespace.inner.slice(index);
-              item.whitespace.inner = item.whitespace.inner.slice(0, index);
-            }
+          if (item.whitespace.after) {
+            item.value.whitespace.before += item.whitespace.after;
+            item.whitespace.after = '';
           }
 
-          this.state = 'afterNestedValue';
+          this.state = 'afterItem';
           return { push: item.value };
         },
       },
       {
-        pattern: [NewlineToken, PaddingToken.optional(), CommentToken.optional()],
+        pattern: [LineEndToken.optional(), NewlineToken],
         action: function(
           this: ListNode,
-          tokens: Array<PaddingToken | CommentToken | NewlineToken>,
+          tokens: Array<LineEndToken | NewlineToken>,
         ) {
           const item = this.value[this.value.length - 1];
-          item.whitespace.after = item.whitespace.after + tokens.map((token) => token.value).join('');
+          item.whitespace.after += tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
       },
@@ -209,23 +180,13 @@ export default class ListNode extends Node<ListNodeState> {
 
     afterValue: [
       {
-        pattern: [oneOf([PaddingToken, CommentToken])],
-        action: function(this: ListNode, tokens: [PaddingToken | CommentToken]) {
+        pattern: [LineEndToken.optional(), NewlineToken],
+        action: function(this: ListNode, tokens: Array<LineEndToken | NewlineToken>) {
           const item = this.value[this.value.length - 1];
-          item.whitespace.after = item.whitespace.after + tokens[0].value;
+          item.whitespace.after += tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
       },
-      {
-        pattern: [],
-        action: function(this: ListNode, tokens: []) {
-          this.state = 'afterItem';
-          return {};
-        },
-      },
-    ],
-
-    afterNestedValue: [
       {
         pattern: [],
         action: function(this: ListNode, tokens: []) {
@@ -237,22 +198,21 @@ export default class ListNode extends Node<ListNodeState> {
 
     afterItem: [
       {
-        pattern: [
-          NewlineToken,
-          PaddingToken.optional(),
-          oneOf([StringToken, SymbolToken, DashToken]),
-        ],
+        pattern: [PaddingToken.optional(), oneOf([StringToken, SymbolToken, DashToken])],
         action: function(
           this: ListNode,
           tokens: (
-            | [NewlineToken, StringToken | SymbolToken | DashToken]
-            | [NewlineToken, PaddingToken, StringToken | SymbolToken | DashToken]
+            | [StringToken | SymbolToken | DashToken]
+            | [PaddingToken, StringToken | SymbolToken | DashToken]
           ),
         ) {
-          const indentLength = tokens.length === 3 ? tokens[1].value.length : 0;
+          const item = this.value[this.value.length - 1];
 
-          if (indentLength !== 0 && indentLength % 4 !== 0)
-            throw Error(`Invalid indent ${indentLength}`);
+          // Hoist value whitespace to item
+          item.whitespace.after += item.value.whitespace.after;
+          item.value.whitespace.after = '';
+
+          const indentLength = tokens[0] instanceof PaddingToken ? tokens[0].value.length : 0;
 
           if (this.nesting === indentLength / 4) {
             this.state = 'beforeIndent';
@@ -260,11 +220,12 @@ export default class ListNode extends Node<ListNodeState> {
           }
 
           if (this.nesting > indentLength / 4) {
-            // TODO: Do this as post processing?
             // We're leaving this list, so hoist the whitespace from this item to the list
-            const item = this.value[this.value.length - 1];
-            this.whitespace.after = item.whitespace.after;
-            item.whitespace.after = '';
+            const index = item.whitespace.after.indexOf('\n');
+            if (index !== -1) {
+              this.whitespace.after += item.whitespace.after.slice(index + 1);
+              item.whitespace.after = item.whitespace.after.slice(0, index);
+            }
 
             return { pop: true };
           }
@@ -273,26 +234,28 @@ export default class ListNode extends Node<ListNodeState> {
         },
       },
       {
-        pattern: [NewlineToken, PaddingToken.optional(), CommentToken.optional()],
-        action: function(
-          this: ListNode,
-          tokens: Array<PaddingToken | CommentToken | NewlineToken>,
-        ) {
+        pattern: [LineEndToken.optional(), NewlineToken],
+        action: function(this: ListNode, tokens: Array<LineEndToken | NewlineToken>) {
           const item = this.value[this.value.length - 1];
-          item.whitespace.after = item.whitespace.after + tokens.map((token) => token.value).join('');
+          item.whitespace.after += tokens.map((token) => token.value).join('');
+
           return { consumed: tokens.length };
         },
       },
       {
-        pattern: [EndToken],
-        action: function(this: ListNode, tokens: [EndToken]) {
-          // TODO: Do this as post processing?
-          // We're ending the document, so hoist the whitespace from this item to the map
+        pattern: [LineEndToken.optional(), EndToken],
+        action: function(this: ListNode, tokens: [EndToken] | [LineEndToken, EndToken]) {
           const item = this.value[this.value.length - 1];
-          this.whitespace.after = item.whitespace.after;
-          item.whitespace.after = '';
+          item.whitespace.after += tokens[0] instanceof LineEndToken ? tokens[0].value : '';
 
-          return { pop: true };
+          // We're ending the document, so hoist the whitespace from this item to the list
+          const index = item.whitespace.after.indexOf('\n');
+          if (index !== -1) {
+            this.whitespace.after += item.whitespace.after.slice(index);
+            item.whitespace.after = item.whitespace.after.slice(0, index);
+          }
+
+          return { consumed: tokens[0] instanceof LineEndToken ? 1 : 0, pop: true };
         },
       },
     ],

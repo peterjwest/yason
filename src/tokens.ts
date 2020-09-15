@@ -72,7 +72,7 @@ export class ValueToken extends RegexToken {
   /** Create a new token based on this */
   static parse(input: string) {
     const match = input.match(this.regex);
-    if (match) return new this(match[0]);
+    if (match && match[0].length > 0) return new this(match[0]);
   }
 }
 
@@ -122,10 +122,10 @@ export class SquareOpenToken extends RegexToken { static regex = /^\[/; value = 
 export class SquareCloseToken extends RegexToken { static regex = /^\]/; value = ']'; }
 
 /** Single line comment */
-export class CommentToken extends ValueToken { static regex = /^#[^\n]*/; }
+export class LineEndToken extends ValueToken { static regex = /^[\t ]*(#[^\n]*)?(?=\n|$)/; }
 
 /** Padding (whitespace not including newlines) */
-export class PaddingToken extends ValueToken { static regex = /^[\t ]+/; }
+export class PaddingToken extends ValueToken { static regex = /^[\t ]+(?=[^#\n])/; }
 
 /** Newline */
 export class NewlineToken extends RegexToken { static regex = /^\n/; value = '\n'; }
@@ -139,7 +139,7 @@ export type SimpleTokenClass = (
   typeof TrueToken | typeof FalseToken | typeof NullToken | typeof NumberToken | typeof StringToken |
   typeof SymbolToken | typeof ColonToken | typeof DashToken | typeof CommaToken |
   typeof CurlyOpenToken | typeof CurlyCloseToken | typeof SquareOpenToken | typeof SquareCloseToken |
-  typeof CommentToken | typeof PaddingToken | typeof NewlineToken | typeof EndToken
+  typeof LineEndToken | typeof PaddingToken | typeof NewlineToken | typeof EndToken
 );
 
 /** Token representing any primitive value */

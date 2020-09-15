@@ -192,8 +192,7 @@ describe('Node', () => {
       ];
 
       const result = node.runNextAction([new NumberToken('123')]);
-      assert.deepStrictEqual(result, { result: undefined, length: undefined });
-
+      assert.deepStrictEqual(result, undefined);
 
       assertStub.notCalled(actions[0]);
       assertStub.notCalled(actions[1]);

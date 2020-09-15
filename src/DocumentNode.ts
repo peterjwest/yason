@@ -3,7 +3,7 @@ import {
   TrueToken, FalseToken, NullToken,
   NumberToken, StringToken,
   SymbolToken, ColonToken, DashToken,
-  CommentToken, PaddingToken, NewlineToken,
+  LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
 import Node, { ActionResult, WhitespaceAst } from './Node';
 import ListNode, { ListAst } from './ListNode';
@@ -66,7 +66,7 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         },
       },
       {
-        pattern: [PrimitiveToken],
+        pattern: [PrimitiveToken, LineEndToken.optional(), oneOf([NewlineToken, EndToken])],
         action: function(
           this: DocumentNode, tokens: [TrueToken | FalseToken | NullToken | NumberToken | StringToken],
         ): ActionResult {
@@ -79,13 +79,13 @@ export default class DocumentNode extends Node<DocumentNodeState> {
           }
 
           this.state = 'afterValue';
-          return { consumed: tokens.length };
+          return { consumed: 1 };
         },
       },
       {
-        pattern: [PaddingToken.optional(), CommentToken.optional(), NewlineToken],
+        pattern: [LineEndToken.optional(), NewlineToken],
         action: function(
-          this: DocumentNode, tokens: Array<PaddingToken | CommentToken | NewlineToken>,
+          this: DocumentNode, tokens: Array<LineEndToken | NewlineToken>,
         ): ActionResult {
           this.whitespace.before = this.whitespace.before + tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
@@ -95,12 +95,11 @@ export default class DocumentNode extends Node<DocumentNodeState> {
 
     afterValue: [
       {
-        pattern: [oneOf([PaddingToken, NewlineToken, CommentToken])],
+        pattern: [oneOf([LineEndToken, NewlineToken])],
         action: function(
-          this: DocumentNode, tokens: [PaddingToken | NewlineToken | CommentToken],
+          this: DocumentNode, tokens: [LineEndToken | NewlineToken],
         ): ActionResult {
-          const whitespace = tokens.map((token) => token.value).join('');
-          this.value.whitespace.after = this.value.whitespace.after + whitespace;
+          this.value.whitespace.after = this.value.whitespace.after + tokens[0].value;
           return { consumed: tokens.length };
         },
       },
