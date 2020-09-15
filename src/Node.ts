@@ -3,15 +3,15 @@ import max from 'lodash/max';
 import { Token, OptionalToken } from './tokens';
 
 /** Parse action function to run when matched against specified pattern */
-export interface Action<State extends string> {
+export interface Action<State extends string, ChildNode> {
   pattern: Token[];
   /** Parse action */
-  action(this: Node<State>, tokens: Token[]): ActionResult;
+  action(this: Node<State, ChildNode>, tokens: Token[]): ActionResult<ChildNode>;
 }
 
 /** Stack changes returned from an action */
-export interface ActionResult {
-  push?: any; // tslint:disable-line:no-any
+export interface ActionResult<Node> {
+  push?: Node; // tslint:disable-line:no-any
   pop?: boolean;
   consumed?: number;
 }
@@ -59,7 +59,7 @@ export function matchesPattern(tokens: Token[], pattern: Token[]): number | unde
 }
 
 /** Base Node structure to represent any yason structure */
-export default class Node<State extends string> {
+export default class Node<State extends string, ChildNode> {
   whitespace: Whitespace = {
     before: '',
     inner: '',
@@ -68,7 +68,7 @@ export default class Node<State extends string> {
   state: State;
 
   /** Get possible actions given a state */
-  getActions(state: State): Array<Action<State>> {
+  getActions(state: State): Array<Action<State, ChildNode>> {
     return [];
   }
 
@@ -80,7 +80,7 @@ export default class Node<State extends string> {
     interface Match {
       length: number;
       /** Matched action function */
-      action(this: Node<State>, tokens: Token[]): ActionResult;
+      action(this: Node<State, ChildNode>, tokens: Token[]): ActionResult<ChildNode>;
     }
 
     const possibleMatches = (
@@ -101,7 +101,7 @@ export default class Node<State extends string> {
 
     if (matches.length === 1 && possibleMatches.length <= 1) {
       const length = matches[0].length;
-      const result: ActionResult = matches[0].action.call(this, tokens.slice(0, length));
+      const result: ActionResult<ChildNode> = matches[0].action.call(this, tokens.slice(0, length));
       return { result, length: length };
     }
   }

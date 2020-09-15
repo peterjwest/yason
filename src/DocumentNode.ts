@@ -5,7 +5,7 @@ import {
   SymbolToken, ColonToken, DashToken,
   LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
-import Node, { ActionResult, WhitespaceAst } from './Node';
+import Node, { WhitespaceAst } from './Node';
 import ListNode, { ListAst } from './ListNode';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
@@ -20,10 +20,13 @@ export interface DocumentAst {
   value: MapAst | ListAst | ValueAst;
 }
 
+/** Nested types which can be pushed on the stack */
+type DocumentNestedNode = MapNode | ListNode;
+
 /** Node representing a yason document */
-export default class DocumentNode extends Node<DocumentNodeState> {
+export default class DocumentNode extends Node<DocumentNodeState, DocumentNestedNode> {
   state: DocumentNodeState = 'beforeValue';
-  value: MapNode | ListNode | ValueNode;
+  value: DocumentNestedNode | ValueNode;
 
   /** Get possible actions given a state */
   getActions(state: DocumentNodeState) {
@@ -37,7 +40,7 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         action: function(
           this: DocumentNode,
           tokens: [StringToken | SymbolToken, ColonToken] | [StringToken | SymbolToken, PaddingToken, ColonToken],
-        ): ActionResult {
+        ) {
           this.value = new MapNode(0);
 
           // Move whitespace to child node, so that DocumentNode can be discarded
@@ -52,7 +55,7 @@ export default class DocumentNode extends Node<DocumentNodeState> {
       },
       {
         pattern: [DashToken],
-        action: function(this: DocumentNode, tokens: [DashToken]): ActionResult {
+        action: function(this: DocumentNode, tokens: [DashToken]) {
           this.value = new ListNode(0);
 
           // Move whitespace to child node, so that DocumentNode can be discarded
@@ -69,7 +72,7 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         pattern: [PrimitiveToken, LineEndToken.optional(), oneOf([NewlineToken, EndToken])],
         action: function(
           this: DocumentNode, tokens: [TrueToken | FalseToken | NullToken | NumberToken | StringToken],
-        ): ActionResult {
+        ) {
           this.value = new ValueNode(tokens[0]);
 
           // Move whitespace to child node, so that DocumentNode can be discarded
@@ -86,7 +89,7 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         pattern: [LineEndToken.optional(), NewlineToken],
         action: function(
           this: DocumentNode, tokens: Array<LineEndToken | NewlineToken>,
-        ): ActionResult {
+        ) {
           this.whitespace.before = this.whitespace.before + tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },
@@ -98,14 +101,14 @@ export default class DocumentNode extends Node<DocumentNodeState> {
         pattern: [oneOf([LineEndToken, NewlineToken])],
         action: function(
           this: DocumentNode, tokens: [LineEndToken | NewlineToken],
-        ): ActionResult {
+        ) {
           this.value.whitespace.after = this.value.whitespace.after + tokens[0].value;
           return { consumed: tokens.length };
         },
       },
       {
         pattern: [EndToken],
-        action: function(this: DocumentNode, tokens: [EndToken]): ActionResult {
+        action: function(this: DocumentNode, tokens: [EndToken]) {
           return { consumed: tokens.length, pop: true };
         },
       },

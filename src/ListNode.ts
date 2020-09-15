@@ -23,6 +23,11 @@ type ListNodeState = (
   | 'afterItem'
 );
 
+
+/** Nested types which can be pushed on the stack */
+type ListNestedNode = ListNode | MapNode;
+
+
 /** List AST structure */
 export interface ListAst {
   type: 'List';
@@ -31,7 +36,7 @@ export interface ListAst {
 }
 
 /** Node reprsenting a list (array) */
-export default class ListNode extends Node<ListNodeState> {
+export default class ListNode extends Node<ListNodeState, ListNestedNode> {
   state: ListNodeState = 'beforeIndent';
   nesting: number;
   value: ListItemNode[] = [];
@@ -60,7 +65,7 @@ export default class ListNode extends Node<ListNodeState> {
     };
   }
 
-  static actions: { [key: string]: Array<Action<ListNodeState>> } = {
+  static actions: { [key: string]: Array<Action<ListNodeState, ListNestedNode>> } = {
     beforeIndent: [
       {
         pattern: [PaddingToken.optional()],
@@ -270,8 +275,8 @@ interface ListItemAst {
 }
 
 /** Node representing a list item */
-class ListItemNode extends Node<''> {
-  value: ListNode | MapNode | ValueNode;
+class ListItemNode extends Node<'', ListNestedNode | ValueNode> {
+  value: ListNestedNode | ValueNode;
 
   /** Get raw data for the list item value */
   getData() {

@@ -156,9 +156,7 @@ Optional padding or spacing between two tokens.
 - JSON support
 - Create encoder, test against parser
 - Variable indentation checking
-- Create generic type for Action/ActionResult node
 - Look for ways to simplify parser given more flexible consume
-- Move key/colon consumption into KeyNode
 
 [npm-badge]: https://badge.fury.io/js/yason.svg
 [npm-url]: https://www.npmjs.com/package/yason

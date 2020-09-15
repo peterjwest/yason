@@ -3,6 +3,7 @@ import identity from 'lodash/identity';
 
 import { StringToken, SymbolToken } from './tokens';
 import Node, { WhitespaceAst } from './Node';
+import ValueNode from './ValueNode';
 
 /** Value AST structure */
 export interface KeyAst {
@@ -13,7 +14,7 @@ export interface KeyAst {
 }
 
 /** Node to hold primitive values */
-export default class KeyNode extends Node<''> {
+export default class KeyNode extends Node<'', ValueNode> {
   value: string;
   symbol: boolean;
 

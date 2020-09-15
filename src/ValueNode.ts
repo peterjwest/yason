@@ -13,7 +13,7 @@ export interface ValueAst {
 }
 
 /** Node to hold primitive values */
-export default class ValueNode extends Node<''> {
+export default class ValueNode extends Node<'', undefined> {
   value: boolean | null | number | string;
 
   constructor(token: TrueToken | FalseToken | NullToken | NumberToken | StringToken) {

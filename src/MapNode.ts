@@ -25,6 +25,9 @@ export type MapNodeState = (
   | 'afterItem'
 );
 
+/** Nested types which can be pushed on the stack */
+type MapNestedNode = ListNode | MapNode;
+
 /** Map AST structure */
 export interface MapAst {
   type: 'Map';
@@ -33,7 +36,7 @@ export interface MapAst {
 }
 
 /** Node reprsenting a map (dictionary) */
-export default class MapNode extends Node<MapNodeState> {
+export default class MapNode extends Node<MapNodeState, MapNestedNode> {
   state: MapNodeState = 'beforeIndent';
   nesting: number;
   value: MapItemNode[] = [];
@@ -65,7 +68,7 @@ export default class MapNode extends Node<MapNodeState> {
     };
   }
 
-  static actions: { [key: string]: Array<Action<MapNodeState>> } = {
+  static actions: { [key: string]: Array<Action<MapNodeState, MapNestedNode>> } = {
     beforeIndent: [
       {
         pattern: [PaddingToken.optional()],
@@ -202,7 +205,7 @@ export default class MapNode extends Node<MapNodeState> {
     afterValue: [
       {
         pattern: [LineEndToken.optional(), NewlineToken],
-        action: function(this: ListNode, tokens: Array<LineEndToken | NewlineToken>) {
+        action: function(this: MapNode, tokens: Array<LineEndToken | NewlineToken>) {
           const item = this.value[this.value.length - 1];
           item.whitespace.after += tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
@@ -210,7 +213,7 @@ export default class MapNode extends Node<MapNodeState> {
       },
       {
         pattern: [],
-        action: function(this: ListNode, tokens: []) {
+        action: function(this: MapNode, tokens: []) {
           this.state = 'afterItem';
           return {};
         },
@@ -292,9 +295,9 @@ interface MapItemAst {
 }
 
 /** Node representing a map key/value pair */
-export class MapItemNode extends Node<''> {
+export class MapItemNode extends Node<'', MapNestedNode> {
   key: KeyNode;
-  value: ListNode | MapNode | ValueNode;
+  value: MapNestedNode | ValueNode;
 
   /** Get raw data for the map value */
   getData() {

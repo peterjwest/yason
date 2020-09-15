@@ -14,7 +14,7 @@ import Node, { matchesPattern } from '../src/Node';
 /** Possible states for TestNode */
 type TestNodeState = 'first' | 'middle' | 'last';
 /** Mock node for testing matchableTokens */
-class TestNode extends Node<TestNodeState> {
+class TestNode extends Node<TestNodeState, undefined> {
   state: TestNodeState = 'first';
 
   static actions = {
