@@ -1,5 +1,4 @@
-import pickBy from 'lodash/pickBy';
-import identity from 'lodash/identity';
+import lodash from 'lodash';
 
 import {
   EndToken, PrimitiveToken, oneOf,
@@ -12,6 +11,8 @@ import Node, { Action, WhitespaceAst } from './Node';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
 import { JsonList } from './Json';
+
+const { pickBy, identity } = lodash;
 
 /** Possible ListNode states */
 type ListNodeState = (

@@ -1,4 +1,4 @@
-import { find } from 'lodash';
+import lodash from 'lodash';
 
 import {
   Token, EndToken,
@@ -7,6 +7,8 @@ import {
   CurlyOpenToken, CurlyCloseToken, SquareOpenToken, SquareCloseToken,
   LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
+
+const { find } = lodash;
 
 const parseableTokens = [
   TrueToken, FalseToken, NullToken, NumberToken, StringToken,

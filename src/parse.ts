@@ -1,9 +1,11 @@
-import { last } from 'lodash';
+import lodash from 'lodash';
 
 import { Token } from './tokens';
 import DocumentNode from './DocumentNode';
 import MapNode from './MapNode';
 import ListNode from './ListNode';
+
+const { last } = lodash;
 
 /** Parse a yason string and return node graph for the data */
 export default function parse(tokens: Token[]) {

@@ -1,6 +1,4 @@
-import fromPairs from 'lodash/fromPairs';
-import pickBy from 'lodash/pickBy';
-import identity from 'lodash/identity';
+import lodash from 'lodash';
 
 import {
   EndToken, PrimitiveToken, oneOf,
@@ -14,6 +12,8 @@ import ListNode, { ListAst } from './ListNode';
 import ValueNode, { ValueAst } from './ValueNode';
 import KeyNode, { KeyAst } from './KeyNode';
 import { JsonMap } from './Json';
+
+const { fromPairs, pickBy, identity } = lodash;
 
 /** Possible MapNode states */
 export type MapNodeState = (

@@ -1,9 +1,10 @@
-import pickBy from 'lodash/pickBy';
-import identity from 'lodash/identity';
+import lodash from 'lodash';
 
 import { TrueToken, FalseToken, NullToken, NumberToken, StringToken } from './tokens';
 import Node, { WhitespaceAst } from './Node';
 import { JsonPrimitive } from './Json';
+
+const { pickBy, identity } = lodash;
 
 /** Value AST structure */
 export interface ValueAst {

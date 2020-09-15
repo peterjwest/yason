@@ -1,9 +1,10 @@
-import pickBy from 'lodash/pickBy';
-import identity from 'lodash/identity';
+import lodash from 'lodash';
 
 import { StringToken, SymbolToken } from './tokens';
 import Node, { WhitespaceAst } from './Node';
 import ValueNode from './ValueNode';
+
+const { pickBy, identity } = lodash;
 
 /** Value AST structure */
 export interface KeyAst {

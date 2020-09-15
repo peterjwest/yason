@@ -1,6 +1,8 @@
-import max from 'lodash/max';
+import lodash from 'lodash';
 
 import { Token, OptionalToken } from './tokens';
+
+const { max } = lodash;
 
 /** Parse action function to run when matched against specified pattern */
 export interface Action<State extends string, ChildNode> {
