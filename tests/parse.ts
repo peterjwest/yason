@@ -102,6 +102,7 @@ describe('parse', () => {
     const tokens = tokenize(multiline`
       - "Hello \\"World\\""
       - 123
+
       - null
     `);
 
@@ -136,7 +137,7 @@ describe('parse', () => {
           },
         },
         {
-          whitespace: {},
+          whitespace: { before: '\n' },
           type: 'ListItem',
           value: {
             whitespace: {},
@@ -409,6 +410,7 @@ describe('parse', () => {
   it('Parses a map', () => {
     const tokens = tokenize(multiline`
       foo:null
+
       "zig zag": "Hello World"
     `);
 
@@ -439,7 +441,7 @@ describe('parse', () => {
           },
         },
         {
-          whitespace: {},
+          whitespace: { before: '\n' },
           key: {
             whitespace: {},
             type: 'Key',
@@ -809,6 +811,7 @@ describe('parse', () => {
     const tokens = tokenize(multiline`
       foo: "Hi"
       bar:
+        # List comment
           - 1
           - 2
           - 3
@@ -855,7 +858,7 @@ describe('parse', () => {
           whitespace: {},
           value: {
             type: 'List',
-            whitespace: {},
+            whitespace: { before: '  # List comment\n' },
             value: [
               {
                 type: 'ListItem',
@@ -908,10 +911,11 @@ describe('parse', () => {
     });
   });
 
-  it('Parses a list nested in a map', () => {
+  it('Parses a map nested in a list', () => {
     const tokens = tokenize(multiline`
       - "Hi"
       -
+        # Map comment
           foo: 1
           bar: 2
           zim: 3
@@ -944,7 +948,7 @@ describe('parse', () => {
           whitespace: {},
           value: {
             type: 'Map',
-            whitespace: {},
+            whitespace: { before: '  # Map comment\n' },
             value: [
               {
                 type: 'MapItem',

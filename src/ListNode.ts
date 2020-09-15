@@ -70,7 +70,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
       {
         pattern: [PaddingToken.optional()],
         action: function(this: ListNode, tokens: [] | [PaddingToken]) {
-          // TODO: More sophisticaed indent checking i.e. tabs
+          // TODO: More sophisticated indent checking i.e. tabs
           const indentLength = tokens[0] ? tokens[0].value.length : 0;
           if (indentLength % 4 !== 0) {
             throw Error('Invalid indent');
@@ -236,15 +236,6 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
           }
 
           throw Error('Invalid indent');
-        },
-      },
-      {
-        pattern: [LineEndToken.optional(), NewlineToken],
-        action: function(this: ListNode, tokens: Array<LineEndToken | NewlineToken>) {
-          const item = this.value[this.value.length - 1];
-          item.whitespace.after += tokens.map((token) => token.value).join('');
-
-          return { consumed: tokens.length };
         },
       },
       {

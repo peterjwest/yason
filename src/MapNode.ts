@@ -90,9 +90,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
     beforeKey: [
       {
         pattern: [
-          oneOf([StringToken, SymbolToken]),
-          PaddingToken.optional(),
-          ColonToken,
+          oneOf([StringToken, SymbolToken]), PaddingToken.optional(), ColonToken,
         ],
         action: function(
           this: MapNode,
@@ -255,15 +253,6 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
           }
 
           throw Error('Invalid indent');
-        },
-      },
-      {
-        pattern: [LineEndToken.optional(), NewlineToken],
-        action: function(this: MapNode, tokens: Array<LineEndToken | NewlineToken>) {
-          const item = this.value[this.value.length - 1];
-          item.whitespace.after += tokens.map((token) => token.value).join('');
-
-          return { consumed: tokens.length };
         },
       },
       {
