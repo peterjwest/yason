@@ -7,13 +7,13 @@ import {
   SymbolToken, ColonToken, DashToken,
   LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
-import Node, { Action, WhitespaceAst } from './Node';
+import Node, { PatternAction, WhitespaceAst } from './Node';
 import ListNode, { ListAst } from './ListNode';
 import ValueNode, { ValueAst } from './ValueNode';
 import KeyNode, { KeyAst } from './KeyNode';
 import { JsonMap } from './Json';
 
-const { fromPairs, pickBy, identity } = lodash;
+const { fromPairs, pickBy, identity, repeat } = lodash;
 
 /** Possible MapNode states */
 export type MapNodeState = (
@@ -68,21 +68,22 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
     };
   }
 
-  static actions: { [key: string]: Array<Action<MapNodeState, MapNestedNode>> } = {
+  static actions: { [key: string]: Array<PatternAction<MapNodeState, MapNestedNode>> } = {
     beforeIndent: [
       {
         pattern: [PaddingToken.optional()],
-        action: function(this: MapNode, tokens: [] | [PaddingToken]) {
-          // TODO: More sophisticaed indent checking i.e. tabs
-          const indentLength = tokens[0] ? tokens[0].value.length : 0;
-          if (indentLength % 4 !== 0) {
-            throw Error('Invalid indent');
+        action: function(this: MapNode, tokens: [] | [PaddingToken], indent?: string) {
+          const tokenIndent = (tokens[0] ? tokens[0].value : '');
+          if (indent) {
+            if (repeat(indent, this.nesting) !== tokenIndent) {
+              throw Error('Invalid indent');
+            }
           }
-          if (this.nesting !== indentLength / 4) {
-            throw Error('Invalid indent');
-          }
+
+          // TODO: Check indent is only tabs or spaces
+
           this.state = 'beforeKey';
-          return { consumed: tokens.length };
+          return { consumed: tokens.length, indent: indent && this.nesting > 0 ? undefined : tokenIndent };
         },
       },
     ],
@@ -227,6 +228,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
             | [StringToken | SymbolToken | DashToken]
             | [PaddingToken, StringToken | SymbolToken | DashToken]
           ),
+          indent: string,
         ) {
           const item = this.value[this.value.length - 1];
 
@@ -234,14 +236,16 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
           item.whitespace.after += item.value.whitespace.after;
           item.value.whitespace.after = '';
 
-          const indentLength = tokens[0] instanceof PaddingToken ? tokens[0].value.length : 0;
+          const tokenIndent = tokens[0] instanceof PaddingToken ? tokens[0].value : '';
 
-          if (this.nesting === indentLength / 4) {
+          // TODO: Improve performance of check
+          if (repeat(indent || '', this.nesting) === tokenIndent) {
             this.state = 'beforeIndent';
             return {};
           }
 
-          if (this.nesting > indentLength / 4) {
+          // TODO: Improve performance of check
+          if (repeat(indent, this.nesting).slice(0, tokenIndent.length) === tokenIndent) {
             // We're leaving this map, so hoist the whitespace from this item to the map
             const index = item.whitespace.after.indexOf('\n');
             if (index !== -1) {

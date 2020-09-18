@@ -11,9 +11,14 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), 'Hello "World"');
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Document',
+      indent: undefined,
       whitespace: {},
-      type: 'Value',
-      value: 'Hello "World"',
+      value: {
+        whitespace: {},
+        type: 'Value',
+        value: 'Hello "World"',
+      },
     });
   });
 
@@ -29,12 +34,17 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), 'Hello "World"');
     assert.deepStrictEqual(tree.getAst(), {
-      whitespace: {
-        before: '\n# Before document\n',
-        after: '  # Inline comment\n\n# After document',
+      type: 'Document',
+      indent: undefined,
+      whitespace: {},
+      value: {
+        whitespace: {
+          before: '\n# Before document\n',
+          after: '  # Inline comment\n\n# After document',
+        },
+        type: 'Value',
+        value: 'Hello "World"',
       },
-      type: 'Value',
-      value: 'Hello "World"',
     });
   });
 
@@ -44,9 +54,14 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), 0.1234);
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Document',
+      indent: undefined,
       whitespace: {},
-      type: 'Value',
-      value: 0.1234,
+      value: {
+        whitespace: {},
+        type: 'Value',
+        value: 0.1234,
+      },
     });
   });
 
@@ -56,9 +71,14 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), 3e2);
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Document',
+      indent: undefined,
       whitespace: {},
-      type: 'Value',
-      value: 3e2,
+      value: {
+        whitespace: {},
+        type: 'Value',
+        value: 3e2,
+      },
     });
   });
 
@@ -68,9 +88,14 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), true);
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Document',
+      indent: undefined,
       whitespace: {},
-      type: 'Value',
-      value: true,
+      value: {
+        whitespace: {},
+        type: 'Value',
+        value: true,
+      },
     });
   });
 
@@ -80,9 +105,14 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), false);
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Document',
+      indent: undefined,
       whitespace: {},
-      type: 'Value',
-      value: false,
+      value: {
+        whitespace: {},
+        type: 'Value',
+        value: false,
+      },
     });
   });
 
@@ -92,9 +122,14 @@ describe('parse', () => {
     const tree = parse(tokens);
     assert.deepStrictEqual(tree.getData(), null);
     assert.deepStrictEqual(tree.getAst(), {
+      type: 'Document',
+      indent: undefined,
       whitespace: {},
-      type: 'Value',
-      value: null,
+      value: {
+        whitespace: {},
+        type: 'Value',
+        value: null,
+      },
     });
   });
 });

@@ -1,3 +1,5 @@
+import lodash from 'lodash';
+
 import {
   EndToken, PrimitiveToken, oneOf,
   TrueToken, FalseToken, NullToken,
@@ -5,10 +7,13 @@ import {
   SymbolToken, ColonToken, DashToken,
   LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
+import { JsonValue } from './Json';
 import Node, { WhitespaceAst } from './Node';
 import ListNode, { ListAst } from './ListNode';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
+
+const { pickBy, identity } = lodash;
 
 /** Possible states of a DocumentNode */
 export type DocumentNodeState = 'beforeValue' | 'afterValue';
@@ -16,6 +21,7 @@ export type DocumentNodeState = 'beforeValue' | 'afterValue';
 /** Document AST structure */
 export interface DocumentAst {
   type: 'Document';
+  indent?: string;
   whitespace: WhitespaceAst;
   value: MapAst | ListAst | ValueAst;
 }
@@ -27,10 +33,26 @@ type DocumentNestedNode = MapNode | ListNode;
 export default class DocumentNode extends Node<DocumentNodeState, DocumentNestedNode> {
   state: DocumentNodeState = 'beforeValue';
   value: DocumentNestedNode | ValueNode;
+  indent?: string;
 
   /** Get possible actions given a state */
   getActions(state: DocumentNodeState) {
     return DocumentNode.actions[state];
+  }
+
+  /** Get raw value */
+  getData(): JsonValue {
+    return this.value.getData();
+  }
+
+  /** DocumentNode AST structure */
+  getAst(): DocumentAst {
+    return {
+      type: 'Document',
+      indent: this.indent,
+      whitespace: pickBy(this.whitespace, identity),
+      value: this.value.getAst(),
+    };
   }
 
   static actions = {
@@ -43,7 +65,7 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
         ) {
           this.value = new MapNode(0);
 
-          // Move whitespace to child node, so that DocumentNode can be discarded
+          // Move whitespace to child node, so that DocumentNode has less state
           if (this.whitespace.before) {
             this.value.whitespace.before = this.whitespace.before;
             this.whitespace.before = '';
@@ -58,7 +80,7 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
         action: function(this: DocumentNode, tokens: [DashToken]) {
           this.value = new ListNode(0);
 
-          // Move whitespace to child node, so that DocumentNode can be discarded
+          // Move whitespace to child node, so that DocumentNode has less state
           if (this.whitespace.before) {
             this.value.whitespace.before = this.whitespace.before;
             this.whitespace.before = '';
@@ -71,11 +93,13 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
       {
         pattern: [PrimitiveToken, LineEndToken.optional(), oneOf([NewlineToken, EndToken])],
         action: function(
-          this: DocumentNode, tokens: [TrueToken | FalseToken | NullToken | NumberToken | StringToken],
+          this: DocumentNode,
+          tokens: [TrueToken | FalseToken | NullToken | NumberToken | StringToken],
+          indent?: string,
         ) {
           this.value = new ValueNode(tokens[0]);
 
-          // Move whitespace to child node, so that DocumentNode can be discarded
+          // Move whitespace to child node, so that DocumentNode has less state
           if (this.whitespace.before) {
             this.value.whitespace.before = this.whitespace.before;
             this.whitespace.before = '';
@@ -87,9 +111,7 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
       },
       {
         pattern: [LineEndToken.optional(), NewlineToken],
-        action: function(
-          this: DocumentNode, tokens: Array<LineEndToken | NewlineToken>,
-        ) {
+        action: function(this: DocumentNode, tokens: Array<LineEndToken | NewlineToken>) {
           this.whitespace.before = this.whitespace.before + tokens.map((token) => token.value).join('');
           return { consumed: tokens.length };
         },

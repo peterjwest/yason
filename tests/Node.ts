@@ -175,7 +175,7 @@ describe('Node', () => {
       assert.deepStrictEqual(result, { result: { consumed: true }, length: 3 });
 
       assertStub.notCalled(actions[0]);
-      assertStub.calledWith(actions[1], [[tokens]]);
+      assertStub.calledOnceWith(actions[1], [tokens, undefined]);
       assertStub.notCalled(actions[2]);
       assertStub.notCalled(actions[3]);
     }));

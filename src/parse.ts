@@ -26,9 +26,10 @@ export default function parse(tokens: Token[]) {
     // TODO: Remove
     // console.log(current.constructor.name, current.state, currentTokens);
 
-    const response = current.runNextAction(currentTokens);
+    const response = current.runNextAction(currentTokens, document.indent);
 
     if (response) {
+      if (response.result.indent) document.indent = response.result.indent;
       if (response.result.pop) stack.pop();
       if (response.result.push) stack.push(response.result.push);
       if (response.result.consumed !== undefined) {
@@ -59,5 +60,5 @@ export default function parse(tokens: Token[]) {
     }
   }
 
-  return document.value;
+  return document;
 }

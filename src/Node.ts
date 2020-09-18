@@ -5,10 +5,15 @@ import { Token, OptionalToken } from './tokens';
 const { max } = lodash;
 
 /** Parse action function to run when matched against specified pattern */
-export interface Action<State extends string, ChildNode> {
+export type Action<State extends string, ChildNode> = (
+  this: Node<State, ChildNode>, tokens: Token[], indent?: string,
+) => ActionResult<ChildNode>;
+
+/** Combination of action function and token pattern */
+export interface PatternAction<State extends string, ChildNode> {
   pattern: Token[];
   /** Parse action */
-  action(this: Node<State, ChildNode>, tokens: Token[]): ActionResult<ChildNode>;
+  action: Action<State, ChildNode>;
 }
 
 /** Stack changes returned from an action */
@@ -16,6 +21,7 @@ export interface ActionResult<Node> {
   push?: Node; // tslint:disable-line:no-any
   pop?: boolean;
   consumed?: number;
+  indent?: string;
 }
 
 /** Whitespace structure for all nodes */
@@ -70,19 +76,19 @@ export default class Node<State extends string, ChildNode> {
   state: State;
 
   /** Get possible actions given a state */
-  getActions(state: State): Array<Action<State, ChildNode>> {
+  getActions(state: State): Array<PatternAction<State, ChildNode>> {
     return [];
   }
 
   /** Run the next action on this node, based on the current state */
-  runNextAction(tokens: Token[]) {
+  runNextAction(tokens: Token[], indent?: string) {
     const actions = this.getActions(this.state);
 
     /** A matched action and the number of tokens that matched */
     interface Match {
       length: number;
       /** Matched action function */
-      action(this: Node<State, ChildNode>, tokens: Token[]): ActionResult<ChildNode>;
+      action: Action<State, ChildNode>;
     }
 
     const possibleMatches = (
@@ -103,7 +109,7 @@ export default class Node<State extends string, ChildNode> {
 
     if (matches.length === 1 && possibleMatches.length <= 1) {
       const length = matches[0].length;
-      const result: ActionResult<ChildNode> = matches[0].action.call(this, tokens.slice(0, length));
+      const result: ActionResult<ChildNode> = matches[0].action.call(this, tokens.slice(0, length), indent);
       return { result, length: length };
     }
   }

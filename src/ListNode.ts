@@ -7,12 +7,12 @@ import {
   SymbolToken, DashToken,
   LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
-import Node, { Action, WhitespaceAst } from './Node';
+import Node, { PatternAction, WhitespaceAst } from './Node';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
 import { JsonList } from './Json';
 
-const { pickBy, identity } = lodash;
+const { pickBy, identity, repeat } = lodash;
 
 /** Possible ListNode states */
 type ListNodeState = (
@@ -66,21 +66,22 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
     };
   }
 
-  static actions: { [key: string]: Array<Action<ListNodeState, ListNestedNode>> } = {
+  static actions: { [key: string]: Array<PatternAction<ListNodeState, ListNestedNode>> } = {
     beforeIndent: [
       {
         pattern: [PaddingToken.optional()],
-        action: function(this: ListNode, tokens: [] | [PaddingToken]) {
-          // TODO: More sophisticated indent checking i.e. tabs
-          const indentLength = tokens[0] ? tokens[0].value.length : 0;
-          if (indentLength % 4 !== 0) {
-            throw Error('Invalid indent');
+        action: function(this: ListNode, tokens: [] | [PaddingToken], indent?: string) {
+          const tokenIndent = (tokens[0] ? tokens[0].value : '');
+          if (indent) {
+            if (repeat(indent, this.nesting) !== tokenIndent) {
+              throw Error('Invalid indent');
+            }
           }
-          if (this.nesting !== indentLength / 4) {
-            throw Error('Invalid indent');
-          }
+
+          // TODO: Check indent is only tabs or spaces
+
           this.state = 'beforeKey';
-          return { consumed: tokens.length };
+          return { consumed: tokens.length, indent: indent && this.nesting > 0 ? undefined : tokenIndent };
         },
       },
     ],
@@ -125,10 +126,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
       },
       {
         pattern: [LineEndToken.optional(), NewlineToken],
-        action: function(
-          this: ListNode,
-          tokens: Array<LineEndToken | NewlineToken>,
-        ) {
+        action: function(this: ListNode, tokens: Array<LineEndToken | NewlineToken>) {
           const item = this.value[this.value.length - 1];
           item.whitespace.inner += tokens[0] instanceof LineEndToken ? tokens[0].value : '';
 
@@ -157,7 +155,10 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
       },
       {
         pattern: [PaddingToken, oneOf([StringToken, SymbolToken])],
-        action: function(this: ListNode, tokens: [PaddingToken, StringToken | SymbolToken]) {
+        action: function(
+          this: ListNode,
+          tokens: [PaddingToken, StringToken | SymbolToken],
+        ) {
           const item = this.value[this.value.length - 1];
           item.value = new MapNode(this.nesting + 1);
 
@@ -211,6 +212,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
             | [StringToken | SymbolToken | DashToken]
             | [PaddingToken, StringToken | SymbolToken | DashToken]
           ),
+          indent: string,
         ) {
           const item = this.value[this.value.length - 1];
 
@@ -218,14 +220,16 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
           item.whitespace.after += item.value.whitespace.after;
           item.value.whitespace.after = '';
 
-          const indentLength = tokens[0] instanceof PaddingToken ? tokens[0].value.length : 0;
+          const tokenIndent = tokens[0] instanceof PaddingToken ? tokens[0].value : '';
 
-          if (this.nesting === indentLength / 4) {
+          // TODO: Improve performance of check
+          if (repeat(indent || '', this.nesting) === tokenIndent) {
             this.state = 'beforeIndent';
             return {};
           }
 
-          if (this.nesting > indentLength / 4) {
+          // TODO: Improve performance of check
+          if (repeat(indent, this.nesting).slice(0, tokenIndent.length) === tokenIndent) {
             // We're leaving this list, so hoist the whitespace from this item to the list
             const index = item.whitespace.after.indexOf('\n');
             if (index !== -1) {

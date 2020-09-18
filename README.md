@@ -153,10 +153,12 @@ Optional padding or spacing between two tokens.
   - Symbol not followed by colon
   - Invalid style of comment "//"
   - Single quotes
+  - Missing padding after list index
 - JSON support
 - Create encoder, test against parser
-- Variable indentation checking
 - Look for ways to simplify parser given more flexible consume
+- Only include whitespace for relevant fields
+- Test mixed indentation and indentation failures
 
 [npm-badge]: https://badge.fury.io/js/yason.svg
 [npm-url]: https://www.npmjs.com/package/yason
