@@ -1,4 +1,4 @@
-# Yason [![npm version][npm-badge]][npm-url] [![build status][circle-badge]][circle-url] [![coverage status][coverage-badge]][coverage-url]
+# Yason [![build status][circle-badge]][circle-url] [![coverage status][coverage-badge]][coverage-url]
 
 Yason is a lightweight data-interchange format. It is designed to be easy for humans and machines to write and understand.
 
@@ -159,9 +159,6 @@ Optional padding or spacing between two tokens.
 - Look for ways to simplify parser given more flexible consume
 - Only include whitespace for relevant fields
 - Test mixed indentation and indentation failures
-
-[npm-badge]: https://badge.fury.io/js/yason.svg
-[npm-url]: https://www.npmjs.com/package/yason
 
 [circle-badge]: https://circleci.com/gh/peterjwest/yason.svg?style=shield
 [circle-url]: https://circleci.com/gh/peterjwest/yason
