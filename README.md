@@ -159,6 +159,7 @@ Optional padding or spacing between two tokens.
 - Look for ways to simplify parser given more flexible consume
 - Only include whitespace for relevant fields
 - Test mixed indentation and indentation failures
+- CLI
 
 [circle-badge]: https://circleci.com/gh/peterjwest/yason.svg?style=shield
 [circle-url]: https://circleci.com/gh/peterjwest/yason
