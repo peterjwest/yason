@@ -74,8 +74,11 @@ commands:
           name: Lint Typescript code
           command: yarn lint:ts
       - run:
+          name: Check for missing or unusued dependencies
+          command: pnpm lint:dependencies
+      - run:
           name: Audit production dependencies
-          command: yarn audit-dependencies
+          command: pnpm audit --prod
 
   build:
     steps:

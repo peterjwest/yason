@@ -14,9 +14,9 @@
     "node": ">=10"
   },
   "scripts": {
-    "audit-dependencies": "pnpm audit --prod",
     "build": "rm -rf build/code && tsup src/index.ts --format cjs,esm --dts --out-dir build/code",
     "lint:ts": "eslint .",
+    "lint:dependencies": "depcheck",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run",
     "test:snippets": "test-snippets"
@@ -33,6 +33,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^2.0.5",
+    "depcheck": "^1.4.7",
     "eslint": "^9.8.0",
     "multiline-ts": "^4.0.0",
     "sinon-assert-stub": "^2.1.0",
