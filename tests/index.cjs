@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 const assert = require('assert');
 const multiline = require('multiline-ts');
 
-const yason = require('../build/wrapper');
+const yason = require('../build/wrapper.cjs');
 
 describe('index', () => {
   it('Decodes a list', () => {
