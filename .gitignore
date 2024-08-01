@@ -1,7 +1,3 @@
 /node_modules
-
-/.nyc_output
 /coverage
-
-/build/es5
-/build/es6
+/build/code
