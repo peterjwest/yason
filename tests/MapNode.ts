@@ -1,6 +1,7 @@
 import assert from 'assert';
 import sinonTest from 'sinon-mocha-test';
 import assertStub from 'sinon-assert-stub';
+import { describe, it } from 'vitest';
 
 import {
   StringToken, NumberToken, TrueToken, FalseToken,

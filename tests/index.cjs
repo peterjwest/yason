@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest';
 const assert = require('assert');
 const multiline = require('multiline-ts');
 

@@ -1,5 +1,6 @@
 import assert from 'assert';
 import multiline from 'multiline-ts';
+import { describe, it } from 'vitest';
 
 import yason from '../build/es6/index.mjs';
 

@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { describe, it } from 'vitest';
 
 import { StringToken, NumberToken, TrueToken, FalseToken, NullToken } from '../src/tokens';
 import ValueNode from '../src/ValueNode';

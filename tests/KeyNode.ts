@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { describe, it } from 'vitest';
 
 import { StringToken, SymbolToken } from '../src/tokens';
 import KeyNode from '../src/KeyNode';
