@@ -77,6 +77,9 @@ commands:
           name: Check for missing or unusued dependencies
           command: pnpm lint:dependencies
       - run:
+          name: General linting
+          command: pnpm lint:unlinted
+      - run:
           name: Audit production dependencies
           command: pnpm audit --prod
 
