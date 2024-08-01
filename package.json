@@ -20,7 +20,9 @@
     "lint:unlinted": "unlinted",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run",
-    "test:snippets": "test-snippets"
+    "test:snippets": "test-snippets",
+    "preinstall": "npx only-allow pnpm",
+    "prepublish": "pnpm install && pnpm build"
   },
   "dependencies": {
     "lodash": "^4.17.21"
@@ -37,6 +39,7 @@
     "depcheck": "^1.4.7",
     "eslint": "^9.8.0",
     "multiline-ts": "^4.0.0",
+    "only-allow": "^1.2.1",
     "sinon-assert-stub": "^2.1.0",
     "sinon-mocha-test": "^2.1.1",
     "test-snippets": "^2.0.0",
