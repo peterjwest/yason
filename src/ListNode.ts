@@ -12,8 +12,6 @@ import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
 import { JsonList } from './Json';
 
-const { pickBy, identity, repeat } = lodash;
-
 /** Possible ListNode states */
 type ListNodeState = (
   | 'beforeIndent'
@@ -61,7 +59,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
   getAst(): ListAst {
     return {
       type: 'List',
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (value) => value),
       value: this.value.map((node) => node.getAst()),
     };
   }
@@ -73,7 +71,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
         action: function(this: ListNode, tokens: [] | [PaddingToken], indent?: string) {
           const tokenIndent = (tokens[0] ? tokens[0].value : '');
           if (indent) {
-            if (repeat(indent, this.nesting) !== tokenIndent) {
+            if (lodash.repeat(indent, this.nesting) !== tokenIndent) {
               throw Error('Invalid indent');
             }
           }
@@ -139,7 +137,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
     beforeNestedValue: [
       {
         pattern: [PaddingToken, DashToken],
-        action: function(this: ListNode, tokens: [PaddingToken, DashToken]) {
+        action: function(this: ListNode) {
           const item = this.value[this.value.length - 1];
           item.value = new ListNode(this.nesting + 1);
 
@@ -155,10 +153,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
       },
       {
         pattern: [PaddingToken, oneOf([StringToken, SymbolToken])],
-        action: function(
-          this: ListNode,
-          tokens: [PaddingToken, StringToken | SymbolToken],
-        ) {
+        action: function(this: ListNode) {
           const item = this.value[this.value.length - 1];
           item.value = new MapNode(this.nesting + 1);
 
@@ -196,7 +191,7 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
       },
       {
         pattern: [],
-        action: function(this: ListNode, tokens: []) {
+        action: function(this: ListNode) {
           this.state = 'afterItem';
           return {};
         },
@@ -223,13 +218,13 @@ export default class ListNode extends Node<ListNodeState, ListNestedNode> {
           const tokenIndent = tokens[0] instanceof PaddingToken ? tokens[0].value : '';
 
           // TODO: Improve performance of check
-          if (repeat(indent || '', this.nesting) === tokenIndent) {
+          if (lodash.repeat(indent || '', this.nesting) === tokenIndent) {
             this.state = 'beforeIndent';
             return {};
           }
 
           // TODO: Improve performance of check
-          if (repeat(indent, this.nesting).slice(0, tokenIndent.length) === tokenIndent) {
+          if (lodash.repeat(indent, this.nesting).slice(0, tokenIndent.length) === tokenIndent) {
             // We're leaving this list, so hoist the whitespace from this item to the list
             const index = item.whitespace.after.indexOf('\n');
             if (index !== -1) {
@@ -283,7 +278,7 @@ class ListItemNode extends Node<'', ListNestedNode | ValueNode> {
   getAst(): ListItemAst {
     return {
       type: 'ListItem',
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (value) => value),
       value: this.value.getAst(),
     };
   }

@@ -13,8 +13,6 @@ import ValueNode, { ValueAst } from './ValueNode';
 import KeyNode, { KeyAst } from './KeyNode';
 import { JsonMap } from './Json';
 
-const { fromPairs, pickBy, identity, repeat } = lodash;
-
 /** Possible MapNode states */
 export type MapNodeState = (
   | 'beforeIndent'
@@ -53,7 +51,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
 
   /** Get raw data for the map */
   getData(): JsonMap {
-    return fromPairs(this.value.map((item) => [
+    return lodash.fromPairs(this.value.map((item) => [
       item.key.getData(),
       item.getData(),
     ]));
@@ -63,7 +61,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
   getAst(): MapAst {
     return {
       type: 'Map',
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (value) => value),
       value: this.value.map((item) => item.getAst()),
     };
   }
@@ -75,7 +73,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
         action: function(this: MapNode, tokens: [] | [PaddingToken], indent?: string) {
           const tokenIndent = (tokens[0] ? tokens[0].value : '');
           if (indent) {
-            if (repeat(indent, this.nesting) !== tokenIndent) {
+            if (lodash.repeat(indent, this.nesting) !== tokenIndent) {
               throw Error('Invalid indent');
             }
           }
@@ -160,7 +158,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
     beforeNestedValue: [
       {
         pattern: [PaddingToken, oneOf([StringToken, SymbolToken])],
-        action: function(this: MapNode, tokens: [PaddingToken, StringToken | SymbolToken]) {
+        action: function(this: MapNode) {
           const item = this.value[this.value.length - 1];
           item.value = new MapNode(this.nesting + 1);
 
@@ -176,7 +174,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
       },
       {
         pattern: [PaddingToken, DashToken],
-        action: function(this: MapNode, tokens: [PaddingToken, DashToken]) {
+        action: function(this: MapNode) {
           const item = this.value[this.value.length - 1];
           item.value = new ListNode(this.nesting + 1);
 
@@ -212,7 +210,7 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
       },
       {
         pattern: [],
-        action: function(this: MapNode, tokens: []) {
+        action: function(this: MapNode) {
           this.state = 'afterItem';
           return {};
         },
@@ -239,13 +237,13 @@ export default class MapNode extends Node<MapNodeState, MapNestedNode> {
           const tokenIndent = tokens[0] instanceof PaddingToken ? tokens[0].value : '';
 
           // TODO: Improve performance of check
-          if (repeat(indent || '', this.nesting) === tokenIndent) {
+          if (lodash.repeat(indent || '', this.nesting) === tokenIndent) {
             this.state = 'beforeIndent';
             return {};
           }
 
           // TODO: Improve performance of check
-          if (repeat(indent, this.nesting).slice(0, tokenIndent.length) === tokenIndent) {
+          if (lodash.repeat(indent, this.nesting).slice(0, tokenIndent.length) === tokenIndent) {
             // We're leaving this map, so hoist the whitespace from this item to the map
             const index = item.whitespace.after.indexOf('\n');
             if (index !== -1) {
@@ -301,7 +299,7 @@ export class MapItemNode extends Node<'', MapNestedNode> {
   getAst(): MapItemAst {
     return {
       type: 'MapItem',
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (value) => value),
       key: this.key.getAst(),
       value: this.value.getAst(),
     };

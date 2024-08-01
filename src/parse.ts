@@ -5,8 +5,6 @@ import DocumentNode from './DocumentNode';
 import MapNode from './MapNode';
 import ListNode from './ListNode';
 
-const { last } = lodash;
-
 /** Parse a yason string and return node graph for the data */
 export default function parse(tokens: Token[]) {
   const document = new DocumentNode();
@@ -16,7 +14,7 @@ export default function parse(tokens: Token[]) {
   while (startIndex < tokens.length || stack.length) {
     const currentTokens = tokens.slice(startIndex, endIndex + 1);
 
-    const current = last(stack);
+    const current = lodash.last(stack);
 
     if (!current) {
       // TODO: Better error message

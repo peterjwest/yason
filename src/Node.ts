@@ -2,8 +2,6 @@ import lodash from 'lodash';
 
 import { Token, OptionalToken } from './tokens';
 
-const { max } = lodash;
-
 /** Parse action function to run when matched against specified pattern */
 export type Action<State extends string, ChildNode> = (
   this: Node<State, ChildNode>, tokens: Token[], indent?: string,
@@ -76,6 +74,7 @@ export default class Node<State extends string, ChildNode> {
   state: State;
 
   /** Get possible actions given a state */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getActions(state: State): Array<PatternAction<State, ChildNode>> {
     return [];
   }
@@ -117,6 +116,6 @@ export default class Node<State extends string, ChildNode> {
   /** Count the maximum number of tokens which can be matched by the Node in this state */
   matchableTokens(): number {
     const actions = this.getActions(this.state);
-    return max(actions.map(({ pattern }) => pattern.length)) || 0;
+    return lodash.max(actions.map(({ pattern }) => pattern.length)) || 0;
   }
 }

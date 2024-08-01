@@ -174,7 +174,7 @@ describe('parse', () => {
       bar: { zim: {
         gir: 123,
         zig: 1e5,
-      }},
+      } },
       zip: true,
     });
 
@@ -308,7 +308,7 @@ describe('parse', () => {
       bar: { zim: {
         gir: 123,
         zig: 1e5,
-      }},
+      } },
       zip: true,
     });
 
@@ -443,7 +443,7 @@ describe('parse', () => {
       bar: { zim: {
         gir: 123,
         zig: 1e5,
-      }},
+      } },
       zip: true,
     });
 

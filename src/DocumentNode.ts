@@ -13,8 +13,6 @@ import ListNode, { ListAst } from './ListNode';
 import MapNode, { MapAst } from './MapNode';
 import ValueNode, { ValueAst } from './ValueNode';
 
-const { pickBy, identity } = lodash;
-
 /** Possible states of a DocumentNode */
 export type DocumentNodeState = 'beforeValue' | 'afterValue';
 
@@ -50,7 +48,7 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
     return {
       type: 'Document',
       indent: this.indent,
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (node) => node),
       value: this.value.getAst(),
     };
   }
@@ -59,10 +57,7 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
     beforeValue: [
       {
         pattern: [oneOf([StringToken, SymbolToken]), PaddingToken.optional(), ColonToken],
-        action: function(
-          this: DocumentNode,
-          tokens: [StringToken | SymbolToken, ColonToken] | [StringToken | SymbolToken, PaddingToken, ColonToken],
-        ) {
+        action: function(this: DocumentNode) {
           this.value = new MapNode(0);
 
           // Move whitespace to child node, so that DocumentNode has less state
@@ -77,7 +72,7 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
       },
       {
         pattern: [DashToken],
-        action: function(this: DocumentNode, tokens: [DashToken]) {
+        action: function(this: DocumentNode) {
           this.value = new ListNode(0);
 
           // Move whitespace to child node, so that DocumentNode has less state
@@ -95,7 +90,6 @@ export default class DocumentNode extends Node<DocumentNodeState, DocumentNested
         action: function(
           this: DocumentNode,
           tokens: [TrueToken | FalseToken | NullToken | NumberToken | StringToken],
-          indent?: string,
         ) {
           this.value = new ValueNode(tokens[0]);
 

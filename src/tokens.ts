@@ -92,11 +92,13 @@ export class NumberToken extends ValueToken {
 
 /** String with double quotes */
 export class StringToken extends ValueToken {
+  // eslint-disable-next-line no-control-regex, no-useless-escape
   static regex = /^"([^"\\\x00-\x1F\x7F-\x9F]|\\["\\\/bfnrt]|\\u[0-9a-f]{4})+"/;
 }
 
 /** An unquoted string which can be used as a map key */
 export class SymbolToken extends ValueToken {
+  // eslint-disable-next-line no-control-regex, no-useless-escape
   static regex = /^[^\s\\\-\[\]\{\},'":#\x00-\x1F\x7F-\x9F]+(?= *:)/;
 }
 

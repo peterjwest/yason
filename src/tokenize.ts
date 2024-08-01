@@ -8,8 +8,6 @@ import {
   LineEndToken, PaddingToken, NewlineToken,
 } from './tokens';
 
-const { find } = lodash;
-
 const parseableTokens = [
   TrueToken, FalseToken, NullToken, NumberToken, StringToken,
   SymbolToken, ColonToken, DashToken, CommaToken,
@@ -23,7 +21,7 @@ export default function tokenize(input: string) {
   const tokens: Token[] = [];
   let remaining = input;
   while (remaining.length > 0) {
-    const found = find(parseableTokens, (TokenType) => {
+    const found = lodash.find(parseableTokens, (TokenType) => {
       const token = TokenType.parse(remaining);
       if (token) {
         tokens.push(token);

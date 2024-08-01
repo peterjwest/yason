@@ -348,8 +348,8 @@ describe('tokens', () => {
     describe('parse', () => {
       it('Parses a comment', () => {
         assert.deepStrictEqual(
-          LineEndToken.parse('  # some comment! #:\😈'),
-          new LineEndToken('  # some comment! #:\😈'),
+          LineEndToken.parse('  # some comment! #:😈'),
+          new LineEndToken('  # some comment! #:😈'),
         );
       });
 

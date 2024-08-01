@@ -4,8 +4,6 @@ import { StringToken, SymbolToken } from './tokens';
 import Node, { WhitespaceAst } from './Node';
 import ValueNode from './ValueNode';
 
-const { pickBy, identity } = lodash;
-
 /** Value AST structure */
 export interface KeyAst {
   type: 'Key';
@@ -21,7 +19,7 @@ export default class KeyNode extends Node<'', ValueNode> {
 
   constructor(token: StringToken | SymbolToken) {
     super();
-    this.value = token instanceof StringToken ? JSON.parse(token.value) : token.value;
+    this.value = token instanceof StringToken ? JSON.parse(token.value) as string : token.value;
     this.symbol = token instanceof SymbolToken;
   }
 
@@ -35,7 +33,7 @@ export default class KeyNode extends Node<'', ValueNode> {
     return {
       type: 'Key',
       symbol: this.symbol,
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (value) => value),
       value: this.value,
     };
   }

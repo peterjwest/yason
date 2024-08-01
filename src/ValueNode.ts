@@ -4,8 +4,6 @@ import { TrueToken, FalseToken, NullToken, NumberToken, StringToken } from './to
 import Node, { WhitespaceAst } from './Node';
 import { JsonPrimitive } from './Json';
 
-const { pickBy, identity } = lodash;
-
 /** Value AST structure */
 export interface ValueAst {
   type: 'Value';
@@ -26,7 +24,7 @@ export default class ValueNode extends Node<'', undefined> {
     } else if (token instanceof NullToken) {
       this.value = null;
     } else {
-      this.value = JSON.parse(token.value);
+      this.value = JSON.parse(token.value) as string;
     }
   }
 
@@ -39,7 +37,7 @@ export default class ValueNode extends Node<'', undefined> {
   getAst(): ValueAst {
     return {
       type: 'Value',
-      whitespace: pickBy(this.whitespace, identity),
+      whitespace: lodash.pickBy(this.whitespace, (value) => value),
       value: this.value,
     };
   }
